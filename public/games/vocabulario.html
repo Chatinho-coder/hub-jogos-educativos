@@ -33,7 +33,7 @@
       <h1>🧠 Missão Vocabulário</h1>
       <div class="muted">Inglês 8+ • palavras do cotidiano com contexto visual</div>
       <div class="row">
-        <div class="pill">Pergunta: <span id="qnum">1</span>/10</div>
+        <div class="pill">Pergunta: <span id="qnum">1</span>/12</div>
         <div class="pill">Pontos: <span id="score">0</span></div>
         <div class="pill">Tempo: <span id="time">120</span>s</div>
       </div>
@@ -62,7 +62,26 @@
       {emoji:'👩‍🏫', scene:'Ela explica a matéria na frente da turma.', pt:'professora', en:'teacher', options:['student','teacher','mother','doctor']},
       {emoji:'🧒', scene:'Quem está aprendendo na escola?', pt:'aluno', en:'student', options:['student','driver','teacher','friend']},
       {emoji:'🛣️', scene:'Você anda por ela para chegar na escola.', pt:'rua', en:'street', options:['street','home','notebook','water']},
-      {emoji:'🏫', scene:'Lugar onde você estuda.', pt:'escola', en:'school', options:['school','market','hospital','park']}
+      {emoji:'🏫', scene:'Lugar onde você estuda.', pt:'escola', en:'school', options:['school','market','hospital','park']},
+      {emoji:'🪟', scene:'Abra para entrar luz na sala.', pt:'janela', en:'window', options:['window','door','floor','lamp']},
+      {emoji:'🧑‍⚕️', scene:'Pessoa que cuida da saúde no hospital.', pt:'médico', en:'doctor', options:['doctor','teacher','cook','driver']},
+      {emoji:'👩', scene:'Ela é sua mãe.', pt:'mãe', en:'mother', options:['mother','sister','teacher','friend']},
+      {emoji:'👟', scene:'Calçado para correr na quadra.', pt:'sapato', en:'shoe', options:['sock','shoe','pants','hat']},
+      {emoji:'🍚', scene:'Comida comum no almoço brasileiro.', pt:'arroz', en:'rice', options:['rice','beans','bread','milk']},
+      {emoji:'🍴', scene:'Use isso para comer macarrão.', pt:'garfo', en:'fork', options:['fork','spoon','knife','plate']},
+      {emoji:'🚌', scene:'Transporte coletivo da cidade.', pt:'ônibus', en:'bus', options:['car','bus','bike','train']},
+      {emoji:'🚲', scene:'Veículo de duas rodas sem motor.', pt:'bicicleta', en:'bike', options:['bike','car','boat','plane']},
+      {emoji:'📋', scene:'A professora escreve nisso para aula.', pt:'quadro', en:'board', options:['board','window','book','pen']},
+      {emoji:'✏️', scene:'Objeto usado para escrever no caderno.', pt:'lápis', en:'pencil', options:['pencil','eraser','desk','chair']},
+      {emoji:'👨‍✈️', scene:'Pessoa que dirige um avião.', pt:'piloto', en:'pilot', options:['pilot','driver','doctor','chef']},
+      {emoji:'🍲', scene:'Pessoa que prepara comida no restaurante.', pt:'cozinheiro', en:'cook', options:['cook','teacher','doctor','pilot']},
+      {emoji:'🧑‍🤝‍🧑', scene:'Pessoa com quem você brinca e conversa.', pt:'amigo', en:'friend', options:['friend','teacher','mother','driver']},
+      {emoji:'🚆', scene:'Transporte sobre trilhos.', pt:'trem', en:'train', options:['train','boat','bus','bike']},
+      {emoji:'🧦', scene:'Você usa com tênis no pé.', pt:'meia', en:'sock', options:['sock','shoe','shirt','hat']},
+      {emoji:'👖', scene:'Roupa para as pernas.', pt:'calça', en:'pants', options:['pants','shirt','shoe','hat']},
+      {emoji:'🧢', scene:'Acessório para proteger do sol na cabeça.', pt:'boné', en:'hat', options:['hat','bag','sock','shoe']},
+      {emoji:'🛶', scene:'Transporte na água, pequeno e simples.', pt:'barco', en:'boat', options:['boat','plane','car','train']},
+      {emoji:'✈️', scene:'Meio de transporte para viagens longas no céu.', pt:'avião', en:'plane', options:['plane','boat','bus','bike']}
     ];
 
     let questions = [];
@@ -71,7 +90,7 @@
     let locked = false;
     let timeLeft = 120;
     let timer = null;
-    const TOTAL_QUESTIONS = 10;
+    const TOTAL_QUESTIONS = 12;
 
     const qnum = document.getElementById('qnum');
     const scoreEl = document.getElementById('score');

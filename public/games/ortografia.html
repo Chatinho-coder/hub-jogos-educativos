@@ -154,7 +154,18 @@
       { sentence: "A ____ é fundamental na amizade.", word: "confiança", options: ["confiansa", "confiança"], rule: "Ç/S" },
       { sentence: "O cachorro ____ muito alto.", word: "latiu", options: ["latiu", "latio"], rule: "U/O" },
       { sentence: "Ela ____ uma história incrível.", word: "contou", options: ["conto", "contou"], rule: "U/O" },
-      { sentence: "O ____ do filme foi emocionante.", word: "final", options: ["final", "finar"], rule: "L/R" }
+      { sentence: "O ____ do filme foi emocionante.", word: "final", options: ["final", "finar"], rule: "L/R" },
+      { sentence: "Ela fez a ____ do bolo com cuidado.", word: "receita", options: ["receita", "reseita"], rule: "C/S" },
+      { sentence: "O menino guardou tudo na ____.", word: "mochila", options: ["mochila", "moschila"], rule: "CH/SCH" },
+      { sentence: "Vamos ao ____ comprar frutas.", word: "mercado", options: ["mercado", "mergado"], rule: "C/G" },
+      { sentence: "A ____ estava limpa e organizada.", word: "cozinha", options: ["cozinha", "cosinha"], rule: "Z/S" },
+      { sentence: "Ele perdeu a ____ de matemática.", word: "prova", options: ["prova", "próva"], rule: "Acentuação" },
+      { sentence: "A ____ tocou antes do recreio.", word: "campainha", options: ["campainha", "canpainha"], rule: "M/N" },
+      { sentence: "Ela comprou uma ____ nova.", word: "camiseta", options: ["camiseta", "camizeta"], rule: "S/Z" },
+      { sentence: "O ____ atravessou a rua correndo.", word: "cachorro", options: ["cachorro", "caxorro"], rule: "CH/X" },
+      { sentence: "Precisamos de ____ para a redação.", word: "criatividade", options: ["criatividade", "criatividede"], rule: "DA/DE" },
+      { sentence: "Ele teve uma ____ excelente na prova.", word: "pontuação", options: ["pontuação", "pontuassão"], rule: "Ç/SS" },
+      { sentence: "A ____ estava azul e sem nuvens.", word: "paisagem", options: ["paisagem", "paisajem"], rule: "G/J" }
     ];
 
     let currentQuestions = [];
@@ -165,7 +176,7 @@
     let wrongAnswers = 0;
     let timeLeft = 120;
     let timer = null;
-    const TOTAL_QUESTIONS = 12;
+    const TOTAL_QUESTIONS = 15;
 
     function shuffleArray(array) {
       const arr = [...array];
@@ -308,7 +319,7 @@
     }
 
     function exitGame() {
-      if (confirm('Deseja sair da investiga��o atual? O progresso ser� perdido.')) {
+      if (confirm('Deseja sair da investiga��o atual? O progresso ser� perdido.')) {
         if (timer) { clearInterval(timer); timer = null; }
         document.getElementById('gameScreen').classList.add('hidden');
         document.getElementById('startScreen').classList.remove('hidden');

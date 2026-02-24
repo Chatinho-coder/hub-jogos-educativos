@@ -103,11 +103,11 @@
 
       <div class="intro">
         <button class="cta" id="start">Começar partida</button>
-        <p>8 rodadas, 60s no total. No celular, a partida trava rolagem para foco total.</p>
+        <p>12 rodadas, 60s no total. No celular, a partida trava rolagem para foco total.</p>
       </div>
 
       <div class="hud">
-        <div class="chip">Rodada <b id="round">1/8</b></div>
+        <div class="chip">Rodada <b id="round">1/12</b></div>
         <div class="chip">Pontos <b id="score">0</b></div>
         <div class="chip">Combo <b id="combo">0🔥</b></div>
         <div class="chip">Tempo <b id="time">60s</b></div>
@@ -116,8 +116,8 @@
       </div>
       <div class="compact">
         <details class="panel">
-          <summary id="panelSummary">Painel da partida · Descobrir · 1/8 · 60s</summary>
-          <p><b id="cMode">Descobrir</b> · <b id="cRound">1/8</b> · <b id="cScore">0 pts</b> · <b id="cTime">60s</b> · XP <b id="cXp">0</b></p>
+          <summary id="panelSummary">Painel da partida · Misto A+B · 1/12 · 60s</summary>
+          <p><b id="cMode">Misto A+B</b> · <b id="cRound">1/12</b> · <b id="cScore">0 pts</b> · <b id="cTime">60s</b> · XP <b id="cXp">0</b></p>
         </details>
       </div>
 
@@ -159,7 +159,7 @@ const cosmetics=[
 ];
 
 let state={
-  mode:'A',round:1,maxRounds:8,score:0,combo:0,time:60,over:false,playing:false,questionActive:false,
+  mode:'A',round:1,maxRounds:12,score:0,combo:0,time:60,over:false,playing:false,questionActive:false,
   answer:null,current:null,xp:0,unlocked:['classic'],theme:'classic'
 };
 let timer;
@@ -482,7 +482,7 @@ function endGame(timeout=false){
 
 function leaveMatch(){
   clearInterval(timer);
-  state={...state,round:1,maxRounds:8,score:0,combo:0,time:60,over:false,answer:null,current:null,playing:false,questionActive:false};
+  state={...state,round:1,maxRounds:12,score:0,combo:0,time:60,over:false,answer:null,current:null,playing:false,questionActive:false};
   hideRoundUi();
   el('next').style.display='none';
   el('restart').style.display='none';
@@ -496,7 +496,7 @@ function leaveMatch(){
 }
 
 function resetGame(){
-  state={...state,round:1,maxRounds:8,score:0,combo:0,time:60,over:false,answer:null,playing:true,questionActive:false};
+  state={...state,round:1,maxRounds:12,score:0,combo:0,time:60,over:false,answer:null,playing:true,questionActive:false};
   el('reward').textContent='';
   el('restart').style.display='none';
   el('leaveMatch').style.display='inline-block';
