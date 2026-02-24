@@ -33,8 +33,9 @@
       <h1>🧠 Missão Vocabulário</h1>
       <div class="muted">Inglês 8+ • palavras do cotidiano com contexto visual</div>
       <div class="row">
-        <div class="pill">Pergunta: <span id="qnum">1</span>/8</div>
+        <div class="pill">Pergunta: <span id="qnum">1</span>/10</div>
         <div class="pill">Pontos: <span id="score">0</span></div>
+        <div class="pill">Tempo: <span id="time">120</span>s</div>
       </div>
 
       <div class="scene">
@@ -68,6 +69,9 @@
     let index = 0;
     let score = 0;
     let locked = false;
+    let timeLeft = 120;
+    let timer = null;
+    const TOTAL_QUESTIONS = 10;
 
     const qnum = document.getElementById('qnum');
     const scoreEl = document.getElementById('score');
@@ -77,12 +81,21 @@
     const optionsEl = document.getElementById('options');
     const nextBtn = document.getElementById('nextBtn');
     const game = document.getElementById('game');
+    const timeEl = document.getElementById('time');
 
     function shuffle(arr){ return [...arr].sort(() => Math.random() - 0.5); }
 
     function start(){
-      questions = shuffle(BANK).slice(0,8).map(q => ({...q, options: shuffle(q.options)}));
+      questions = shuffle(BANK).slice(0,TOTAL_QUESTIONS).map(q => ({...q, options: shuffle(q.options)}));
       index = 0; score = 0; locked = false;
+      timeLeft = 120;
+      timeEl.textContent = timeLeft;
+      if (timer) clearInterval(timer);
+      timer = setInterval(() => {
+        timeLeft--;
+        timeEl.textContent = Math.max(0, timeLeft);
+        if (timeLeft <= 0) finish(true);
+      }, 1000);
       render();
     }
 
@@ -128,27 +141,30 @@
     nextBtn.onclick = () => {
       index++;
       if(index >= questions.length){
-        finish();
+        finish(false);
       } else {
         render();
       }
     };
 
-    function finish(){
+    function finish(timeout=false){
+      if (timer) { clearInterval(timer); timer = null; }
+      const timeBonus = Math.max(0, timeLeft) * 2;
+      const finalScore = score + timeBonus;
       game.innerHTML = `
         <div class="center">
           <h1>🎉 Missão completa!</h1>
-          <p class="muted" style="margin-top:8px">Mandou bem no vocabulário do dia a dia.</p>
+          <p class="muted" style="margin-top:8px">${timeout ? '⏰ Tempo esgotado!' : 'Mandou bem no vocabulário do dia a dia.'}</p>
           <div class="scene" style="margin-top:16px">
             <div class="scene-emoji">🏆</div>
-            <div class="scene-text">Pontuação final: <strong>${score}</strong></div>
+            <div class="scene-text">Base: <strong>${score}</strong> • Bônus de tempo: <strong>${timeBonus}</strong><br/>Pontuação final: <strong>${finalScore}</strong></div>
           </div>
           <button class="next" style="margin-top:16px" onclick="location.reload()">Jogar de novo</button>
         </div>
       `;
 
       try {
-        window.parent.postMessage({ type: 'game-score', game: 'vocabulario', score }, '*');
+        window.parent.postMessage({ type: 'game-score', game: 'vocabulario', score: finalScore }, '*');
       } catch (e) {
         console.warn('Falha ao enviar score', e);
       }

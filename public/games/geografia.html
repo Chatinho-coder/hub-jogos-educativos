@@ -148,7 +148,9 @@ function scoreRound({stateOk,capitalOk,streak}){const bs=stateOk?10:0,bc=capital
 function getOptions(cur,key){return shuffle([cur[key],...shuffle(STATES_DATA.filter(s=>s.uf!==cur.uf)).slice(0,3).map(s=>s[key])])}
 
 let geojson=null, projection=null, pathGen=null;
-let state={mode:'loading',queue:[],index:0,score:0,streak:0,errors:0,feedback:'',wrongAnswers:[],stateAnswer:'',capitalAnswer:'',stateOptions:[],capitalOptions:[],showAnswerSheet:false,showOptions:false};
+let timerHandle=null;
+const GAME_TIME=180;
+let state={mode:'loading',queue:[],index:0,score:0,streak:0,errors:0,timeLeft:GAME_TIME,feedback:'',wrongAnswers:[],stateAnswer:'',capitalAnswer:'',stateOptions:[],capitalOptions:[],showAnswerSheet:false,showOptions:false};
 
 async function init(){
   const r=await fetch('/games/brazil-states.json');
@@ -227,7 +229,16 @@ function renderMiniState(container,stateName){
 function resetGame(newMode='menu'){
   const queue=shuffle(STATES_DATA);
   const firstRoundOptions=createRoundOptions(queue[0]);
-  state={mode:newMode,queue,index:0,score:0,streak:0,errors:0,feedback:'',wrongAnswers:[],stateAnswer:'',capitalAnswer:'',stateOptions:firstRoundOptions.stateOptions,capitalOptions:firstRoundOptions.capitalOptions,showAnswerSheet:false,showOptions:false};
+  if(timerHandle){clearInterval(timerHandle);timerHandle=null;}
+  state={mode:newMode,queue,index:0,score:0,streak:0,errors:0,timeLeft:GAME_TIME,feedback:'',wrongAnswers:[],stateAnswer:'',capitalAnswer:'',stateOptions:firstRoundOptions.stateOptions,capitalOptions:firstRoundOptions.capitalOptions,showAnswerSheet:false,showOptions:false};
+  if(newMode==='game'){
+    timerHandle=setInterval(()=>{
+      if(state.mode!=='game') return;
+      state.timeLeft=Math.max(0,state.timeLeft-1);
+      if(state.timeLeft<=0){ state.errors=MAX_ERRORS; }
+      render();
+    },1000);
+  }
   document.body.classList.remove('game-active','answer-sheet-open');
   render();
 }
@@ -254,8 +265,9 @@ function submitRound(){
     state.stateOptions=nextRoundOptions.stateOptions;
     state.capitalOptions=nextRoundOptions.capitalOptions;
     // Send score when game ends
-    if((state.errors>=MAX_ERRORS||state.index>=state.queue.length)&&window.parent!==window){
-      window.parent.postMessage({type:'game-score',game:'geografia',score:state.score},'*');
+    if((state.errors>=MAX_ERRORS||state.index>=state.queue.length||state.timeLeft<=0)&&window.parent!==window){
+      const finalScore=state.score+Math.max(0,state.timeLeft)*2;
+      window.parent.postMessage({type:'game-score',game:'geografia',score:finalScore},'*');
     }
     render();
   },450);
@@ -265,7 +277,8 @@ function submitRound(){
 function render(){
   const app=el('app');
   app.innerHTML='';
-  const ended=state.errors>=MAX_ERRORS||state.index>=state.queue.length;
+  const ended=state.errors>=MAX_ERRORS||state.index>=state.queue.length||state.timeLeft<=0;
+  if(ended&&timerHandle){clearInterval(timerHandle);timerHandle=null;}
   document.body.classList.toggle('game-active',state.mode==='game'&&!ended);
 
   if(state.mode==='loading'){
@@ -315,7 +328,9 @@ function render(){
       h('p',{className:'eyebrow'},'Resultado final'),
       h('h1',null,'Fim de jogo'),
       h('div',{className:'review-grid summary-grid'},
-        h('p',{className:'review-item'},h('strong',null,'Pontuação'),h('span',null,String(state.score))),
+        h('p',{className:'review-item'},h('strong',null,'Pontuação base'),h('span',null,String(state.score))),
+        h('p',{className:'review-item'},h('strong',null,'Bônus de tempo'),h('span',null,String(Math.max(0,state.timeLeft)*2))),
+        h('p',{className:'review-item'},h('strong',null,'Pontuação final'),h('span',null,String(state.score+Math.max(0,state.timeLeft)*2))),
         h('p',{className:'review-item'},h('strong',null,'Maior sequência'),h('span',null,String(state.streak))),
         h('p',{className:'review-item'},h('strong',null,'Erros'),h('span',null,`${state.errors} / ${MAX_ERRORS}`))
       ),
@@ -348,6 +363,7 @@ function render(){
       h('span',{className:'chip'},h('strong',null,String(state.score)),h('small',null,'pontos')),
       h('span',{className:'chip'},h('strong',null,String(state.streak)),h('small',null,'sequência')),
       h('span',{className:'chip'},h('strong',null,`${state.errors}/${MAX_ERRORS}`),h('small',null,'erros')),
+      h('span',{className:'chip'},h('strong',null,`${state.timeLeft}s`),h('small',null,'tempo')),
       h('span',{className:'chip'},h('strong',null,String(Math.min(state.index+1,state.queue.length))),h('small',null,'rodada'))
     ),
     h('div',{className:'progress'},h('span',{style:{width:`${(Math.min(state.index,state.queue.length)/state.queue.length)*100}%`}}))

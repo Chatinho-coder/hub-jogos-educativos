@@ -71,6 +71,7 @@
           </div>
         </div>
         <div class="flex items-center gap-3">
+          <div class="text-yellow-300 font-bold">⏱ <span id="timeDisplay">120</span>s</div>
           <div id="comboDisplay" class="text-2xl font-bold text-green-400"></div>
           <button onclick="exitGame()" class="text-slate-400 hover:text-yellow-400 transition-colors text-sm font-semibold">
             ❌ Sair
@@ -162,7 +163,9 @@
     let combo = 0;
     let correctAnswers = 0;
     let wrongAnswers = 0;
-    const TOTAL_QUESTIONS = 10;
+    let timeLeft = 120;
+    let timer = null;
+    const TOTAL_QUESTIONS = 12;
 
     function shuffleArray(array) {
       const arr = [...array];
@@ -188,6 +191,15 @@
       document.getElementById('startScreen').classList.add('hidden');
       document.getElementById('endScreen').classList.add('hidden');
       document.getElementById('gameScreen').classList.remove('hidden');
+
+      timeLeft = 120;
+      document.getElementById('timeDisplay').textContent = timeLeft;
+      if (timer) clearInterval(timer);
+      timer = setInterval(() => {
+        timeLeft--;
+        document.getElementById('timeDisplay').textContent = Math.max(0, timeLeft);
+        if (timeLeft <= 0) endGame(true);
+      }, 1000);
       
       loadQuestion();
     }
@@ -296,7 +308,8 @@
     }
 
     function exitGame() {
-      if (confirm('🚪 Deseja sair da investigação atual? O progresso será perdido.')) {
+      if (confirm('Deseja sair da investiga��o atual? O progresso ser� perdido.')) {
+        if (timer) { clearInterval(timer); timer = null; }
         document.getElementById('gameScreen').classList.add('hidden');
         document.getElementById('startScreen').classList.remove('hidden');
       }
@@ -324,7 +337,8 @@
       return messages[Math.floor(Math.random() * messages.length)];
     }
 
-    function endGame() {
+    function endGame(timeout = false) {
+      if (timer) { clearInterval(timer); timer = null; }
       const accuracy = Math.round((correctAnswers / TOTAL_QUESTIONS) * 100);
       
       document.getElementById('gameScreen').classList.add('hidden');
@@ -345,13 +359,17 @@
         message = '💪 Continue treinando, detetive! Você vai melhorar!';
       }
       
+      if (timeout) message = '⏰ Tempo esgotado! ' + message;
       document.getElementById('endMessage').textContent = message;
+
+      const finalScore = correctAnswers * 10 + Math.max(0, timeLeft) * 2;
       
-      // Send score to parent hub (score = correctAnswers * 10)
+      // Send score to parent hub
       if (window.parent !== window) {
-        window.parent.postMessage({ type: 'game-score', game: 'ortografia', score: correctAnswers * 10 }, '*');
+        window.parent.postMessage({ type: 'game-score', game: 'ortografia', score: finalScore }, '*');
       }
     }
   </script>
 </body>
 </html>
+

@@ -19,7 +19,7 @@
     .sub{margin:0;color:var(--muted)}
     .intro{display:flex;gap:10px;align-items:center;margin:12px 0 8px;padding:10px;border:1px dashed #efc9a4;border-radius:12px;background:#fff9f2}
     .intro p{margin:0;color:#6c533a;font-size:.95rem}
-    .mode-row{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+    .mode-row{display:none}
     .mode-btn{background:#fff;border:1px solid #efc9a4}
     .mode-btn.active{background:#2b1d0e;color:#fff;border-color:#2b1d0e}
     .hud{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin:10px 0}
@@ -150,7 +150,7 @@
 
 <script>
 const sets=[2,3,4,6,8];
-const modes={A:'Descobrir',B:'Construção',C:'Equivalentes'};
+const modes={A:'Misto A+B'};
 const cosmetics=[
   {id:'classic',name:'Clássica',xp:0,vars:{'--slice-filled':'#ffb347','--slice-empty':'#ffe3c3','--center':'#ffd86d'}},
   {id:'margarita',name:'Margarita',xp:80,vars:{'--slice-filled':'#ff8f7a','--slice-empty':'#ffd8c9','--center':'#f5d469'}},
@@ -285,7 +285,7 @@ function setOptionLayout(count){
 
 function startRoundA(){
   const f=randomFraction();
-  state.answer=f.s; state.current=f;
+  state.answer=f.s; state.current={...f,kind:'A'};
   drawPizza(f.d,f.n);
   showPrompt('Qual fração da pizza está destacada?');
 
@@ -302,14 +302,14 @@ function startRoundA(){
 }
 
 function updateModeBControls(){
-  if(state.mode!=='B' || !state.current) return;
+  if(state.current?.kind!=='B' || !state.current) return;
   el('removeSlice').disabled=state.current.pieces<=1;
 }
 
 function renderModeBPizza(){
   const cur=state.current;
   drawPizza(cur.pieces,0,cur.selected,(sliceIndex)=>{
-    if(!state.questionActive||state.mode!=='B') return;
+    if(!state.questionActive||state.current?.kind!=='B') return;
     const idx=cur.selected.indexOf(sliceIndex);
     if(idx>=0) cur.selected.splice(idx,1);
     else cur.selected.push(sliceIndex);
@@ -321,7 +321,7 @@ function renderModeBPizza(){
 
 function startRoundB(){
   const f=randomFraction();
-  state.current={...f,pieces:1,selected:[]};
+  state.current={...f,pieces:1,selected:[],kind:'B'};
   state.answer=f.s;
   renderModeBPizza();
   showPrompt(`Monte esta fração: <b>${f.n}/${f.d}</b><br><small>Corte e selecione as fatias que representam a fração.</small>`, true);
@@ -378,17 +378,14 @@ function newRound(){
   state.questionActive=true;
   el('next').style.display='none';
   hideRoundUi();
-  if(state.mode==='A') startRoundA();
-  if(state.mode==='B') startRoundB();
-  if(state.mode==='C') startRoundC();
+  if(Math.random()<0.5) startRoundA(); else startRoundB();
   updateHud();
 }
 
 function feedbackExplanation(){
   if(!state.current) return '';
-  if(state.mode==='A') return `A pizza destacada representa ${state.current.n}/${state.current.d}.`;
-  if(state.mode==='B') return `A fração alvo era ${state.current.n}/${state.current.d}.`;
-  return `A forma simplificada correta é ${simplify(state.current.n,state.current.d)}.`;
+  if(state.current.kind==='A') return `A pizza destacada representa ${state.current.n}/${state.current.d}.`;
+  return `A fração alvo era ${state.current.n}/${state.current.d}.`;
 }
 
 function reward(correct){
@@ -425,14 +422,14 @@ function answerChoice(v){
 }
 
 function cutPizza(){
-  if(!state.questionActive||state.mode!=='B') return;
+  if(!state.questionActive||state.current?.kind!=='B') return;
   const cur=state.current;
   cur.pieces+=1;
   renderModeBPizza();
 }
 
 function removeSlice(){
-  if(!state.questionActive||state.mode!=='B') return;
+  if(!state.questionActive||state.current?.kind!=='B') return;
   const cur=state.current;
   if(cur.pieces<=1) return;
   cur.pieces-=1;
@@ -441,7 +438,7 @@ function removeSlice(){
 }
 
 function checkBuild(){
-  if(!state.questionActive||state.mode!=='B') return;
+  if(!state.questionActive||state.current?.kind!=='B') return;
   state.questionActive=false;
   
   el('cutPizza').style.display='none';
@@ -494,7 +491,7 @@ function leaveMatch(){
   el('reward').textContent='';
   setMobileLock(false);
   drawPizza(4,2);
-  showPrompt('Escolha um modo e clique em <b>Começar partida</b>.', true);
+  showPrompt('Clique em <b>Começar partida</b> para desafios mistos (descobrir + construção).', true);
   updateHud();
 }
 
@@ -522,6 +519,7 @@ document.querySelectorAll('.mode-btn').forEach(btn=>btn.onclick=()=>{if(state.pl
 applyTheme(state.theme);
 renderModeButtons();
 drawPizza(4,2);
+showPrompt('Clique em <b>Começar partida</b> para desafios mistos (descobrir + construção).', true);
 updateHud();
 </script>
 </body>

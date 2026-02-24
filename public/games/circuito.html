@@ -127,6 +127,7 @@
   <div class="topbar">
     <div class="badge"><span class="icon">🧩</span> Fase <span id="levelNum">1</span>/10</div>
     <div class="badge"><span class="icon">⭐</span> <span id="stars">0</span></div>
+    <div class="badge"><span class="icon">⏱</span> <span id="timer">120</span>s</div>
     <div class="badge" style="cursor:pointer" onclick="showMenu()"><span class="icon">🏠</span></div>
   </div>
 
@@ -272,19 +273,37 @@ let currentLevel = 0;
 let inputs = {};
 let starsCount = 0;
 let attempts = 0;
+let timeLeft = 120;
+let timer = null;
 
 // ========== NAVIGATION ==========
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
 }
-function showMenu() { showScreen('menuScreen'); }
+function showMenu() {
+  if (timer) { clearInterval(timer); timer = null; }
+  showScreen('menuScreen');
+}
 function showTutorial() { showScreen('tutorialScreen'); }
 
 function startGame() {
   currentLevel = 0;
   starsCount = 0;
+  timeLeft = 120;
   document.getElementById('stars').textContent = '0';
+  document.getElementById('timer').textContent = timeLeft;
+  if (timer) clearInterval(timer);
+  timer = setInterval(() => {
+    timeLeft--;
+    document.getElementById('timer').textContent = Math.max(0, timeLeft);
+    if (timeLeft <= 0) {
+      clearInterval(timer);
+      timer = null;
+      currentLevel = LEVELS.length;
+      nextLevel();
+    }
+  }, 1000);
   showScreen('gameScreen');
   loadLevel();
 }
@@ -407,8 +426,10 @@ function nextLevel() {
   document.getElementById('levelFeedback').classList.remove('show');
   currentLevel++;
   if (currentLevel >= LEVELS.length) {
-    document.getElementById('finalScore').textContent = `⭐ ${starsCount} estrelas conquistadas!`;
-    const finalScore = starsCount * 10;
+    if (timer) { clearInterval(timer); timer = null; }
+    const timeBonus = Math.max(0, timeLeft) * 2;
+    const finalScore = starsCount * 10 + timeBonus;
+    document.getElementById('finalScore').textContent = `⭐ ${starsCount} estrelas + bônus tempo ${timeBonus} = ${finalScore} pts`;
     try {
       window.parent.postMessage({ type: 'game-score', game: 'circuito', score: finalScore }, '*');
     } catch (err) {
