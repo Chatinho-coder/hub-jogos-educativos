@@ -69,6 +69,17 @@ const games = [
     colorLight: '#67E8F9',
     bg: 'linear-gradient(135deg, #22d3ee 0%, #0ea5e9 100%)',
     tag: 'Inglês'
+  },
+  {
+    id: 'sistema-solar',
+    title: 'Aventura no Sistema Solar',
+    emoji: '🚀',
+    subtitle: 'Planetas & Descobertas',
+    description: 'Viaje pelo Sistema Solar respondendo perguntas sobre os planetas. Descubra curiosidades incríveis do nosso universo!',
+    color: '#6366F1',
+    colorLight: '#A5B4FC',
+    bg: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4338ca 100%)',
+    tag: 'Ciências'
   }
 ]
 

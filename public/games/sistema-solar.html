@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>🚀 Aventura no Sistema Solar</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif;background:#0b1220;color:#e2e8f0;min-height:100dvh;display:flex;justify-content:center;overflow-x:hidden}
+    .app{width:min(720px,100%);padding:18px}
+    .card{background:#111a2c;border:1px solid #24324d;border-radius:18px;padding:16px}
+    h1{font-size:1.35rem;margin-bottom:4px}
+    .muted{color:#93a4c2;font-size:.9rem}
+    .row{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+    .pill{background:#1a2740;border:1px solid #2c3b58;border-radius:999px;padding:6px 10px;font-size:.85rem}
+
+    .space-scene{margin-top:14px;background:linear-gradient(135deg,#0c0a2a,#1a1145,#0f172a);border:1px solid #312e81;border-radius:16px;padding:24px;text-align:center;position:relative;overflow:hidden;min-height:200px}
+    .stars{position:absolute;inset:0;pointer-events:none}
+    .star{position:absolute;width:2px;height:2px;background:#fff;border-radius:50%;animation:twinkle 2s infinite alternate}
+    @keyframes twinkle{0%{opacity:.2}100%{opacity:1}}
+
+    .rocket-track{position:relative;width:100%;height:40px;margin-bottom:12px;display:flex;align-items:center}
+    .rocket-bar{position:absolute;left:0;right:0;top:50%;height:3px;background:linear-gradient(90deg,#4338ca,#6366f1,#818cf8);border-radius:2px;transform:translateY(-50%)}
+    .rocket{position:absolute;font-size:1.8rem;transition:left 0.8s cubic-bezier(.34,1.56,.64,1);filter:drop-shadow(0 0 8px rgba(99,102,241,.6));z-index:2}
+    .planet-dots{position:absolute;left:0;right:0;top:50%;display:flex;justify-content:space-between;transform:translateY(-50%);padding:0 8px}
+    .pdot{width:8px;height:8px;border-radius:50%;background:#312e81;border:1px solid #4338ca;transition:background .3s,transform .3s}
+    .pdot.visited{background:#6366f1;transform:scale(1.3)}
+    .pdot.current{background:#a5b4fc;transform:scale(1.5);box-shadow:0 0 8px #818cf8}
+
+    .planet-display{position:relative;z-index:1}
+    .planet-emoji{font-size:4.5rem;line-height:1;animation:float 3s ease-in-out infinite}
+    @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+    .planet-name{font-size:1.4rem;font-weight:800;margin-top:8px;background:linear-gradient(135deg,#a5b4fc,#c4b5fd);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+    .fun-fact{margin-top:8px;font-size:.88rem;color:#a5b4fc;font-style:italic;line-height:1.4}
+
+    .question{margin-top:16px;font-size:1.05rem;font-weight:700}
+    .options{display:grid;grid-template-columns:1fr;gap:10px;margin-top:14px}
+    button.opt{background:#17233a;border:1px solid #2e3f5f;color:#e2e8f0;padding:12px 16px;border-radius:12px;font-size:1rem;font-weight:700;cursor:pointer;transition:all .2s;text-align:left}
+    button.opt:hover{background:#1f2d4a;border-color:#4338ca}
+    button.opt:active{transform:scale(.98)}
+    .ok{border-color:#22c55e !important;background:#123524 !important;animation:pulse-ok .4s}
+    .bad{border-color:#ef4444 !important;background:#3a1b23 !important;animation:shake .4s}
+    @keyframes pulse-ok{0%{transform:scale(1)}50%{transform:scale(1.03)}100%{transform:scale(1)}}
+    @keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
+
+    .next{margin-top:14px;width:100%;background:linear-gradient(135deg,#6366f1,#4338ca);color:#fff;border:none;padding:12px;border-radius:12px;font-size:1rem;font-weight:800;cursor:pointer;transition:transform .2s}
+    .next:hover{transform:scale(1.02)}
+    .center{text-align:center}
+    .hidden{display:none!important}
+
+    .result{text-align:center;padding:24px 0}
+    .result-emoji{font-size:5rem;margin-bottom:12px}
+    .result-title{font-size:1.6rem;font-weight:800;margin-bottom:8px}
+    .result-score{font-size:2.5rem;font-weight:800;background:linear-gradient(135deg,#fbbf24,#f97316);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+    .result-msg{color:#93a4c2;margin-top:8px;line-height:1.5}
+    .replay{margin-top:20px;background:linear-gradient(135deg,#6366f1,#4338ca);color:#fff;border:none;padding:14px 32px;border-radius:12px;font-size:1.05rem;font-weight:800;cursor:pointer}
+
+    .bonus{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);font-size:2rem;font-weight:800;color:#fbbf24;pointer-events:none;animation:bonus-pop .8s forwards;z-index:100}
+    @keyframes bonus-pop{0%{opacity:1;transform:translate(-50%,-50%) scale(.5)}50%{transform:translate(-50%,-80%) scale(1.2)}100%{opacity:0;transform:translate(-50%,-120%) scale(1)}}
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="card" id="game">
+      <h1>🚀 Aventura no Sistema Solar</h1>
+      <div class="muted">Ciências 8+ • descubra os segredos dos planetas</div>
+      <div class="row">
+        <div class="pill">Planeta: <span id="qnum">1</span>/15</div>
+        <div class="pill">Pontos: <span id="score">0</span></div>
+        <div class="pill">Tempo: <span id="time">120</span>s</div>
+      </div>
+
+      <div class="space-scene" id="spaceScene">
+        <div class="stars" id="stars"></div>
+        <div class="rocket-track">
+          <div class="rocket-bar"></div>
+          <div class="planet-dots" id="dots"></div>
+          <div class="rocket" id="rocket">🚀</div>
+        </div>
+        <div class="planet-display">
+          <div class="planet-emoji" id="planetEmoji">🌍</div>
+          <div class="planet-name" id="planetName">Terra</div>
+          <div class="fun-fact" id="funFact">Nosso lar no universo!</div>
+        </div>
+      </div>
+
+      <div class="question" id="question"></div>
+      <div class="options" id="options"></div>
+      <button class="next hidden" id="nextBtn">Próximo planeta ▶</button>
+    </div>
+
+    <div class="card hidden" id="resultCard">
+      <div class="result">
+        <div class="result-emoji" id="resultEmoji">🏆</div>
+        <div class="result-title" id="resultTitle">Missão Completa!</div>
+        <div class="result-score" id="resultScore">0</div>
+        <div class="result-msg" id="resultMsg"></div>
+        <button class="replay" onclick="restartGame()">Jogar novamente 🚀</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+const questions = [
+  {planet:'Mercúrio',emoji:'☿️',fact:'É o planeta mais próximo do Sol e o menor do Sistema Solar!',q:'Qual é o planeta mais próximo do Sol?',opts:['Mercúrio','Vênus','Terra','Marte'],ans:0},
+  {planet:'Vênus',emoji:'🌟',fact:'É o planeta mais quente, mesmo não sendo o mais perto do Sol!',q:'Qual planeta é o mais quente do Sistema Solar?',opts:['Mercúrio','Vênus','Marte','Júpiter'],ans:1},
+  {planet:'Terra',emoji:'🌍',fact:'É o único planeta conhecido com vida e tem 71% de água na superfície!',q:'Quanto da superfície da Terra é coberta por água?',opts:['50%','60%','71%','85%'],ans:2},
+  {planet:'Marte',emoji:'🔴',fact:'É chamado de Planeta Vermelho por causa do óxido de ferro no solo!',q:'Por que Marte é vermelho?',opts:['Pelo calor do Sol','Pelo óxido de ferro','Pela atmosfera','Pela lava'],ans:1},
+  {planet:'Júpiter',emoji:'🟠',fact:'É o maior planeta do Sistema Solar — cabem mais de 1.300 Terras dentro dele!',q:'Qual é o maior planeta do Sistema Solar?',opts:['Saturno','Netuno','Júpiter','Urano'],ans:2},
+  {planet:'Saturno',emoji:'🪐',fact:'Seus famosos anéis são feitos de gelo, rochas e poeira!',q:'Do que são feitos os anéis de Saturno?',opts:['Gases coloridos','Gelo, rochas e poeira','Metal líquido','Cristais brilhantes'],ans:1},
+  {planet:'Urano',emoji:'🔵',fact:'Urano gira "deitado" — seu eixo é inclinado quase 90 graus!',q:'O que é especial sobre a rotação de Urano?',opts:['Gira muito rápido','Gira ao contrário','Gira deitado','Não gira'],ans:2},
+  {planet:'Netuno',emoji:'💙',fact:'Tem os ventos mais fortes do Sistema Solar, chegando a 2.100 km/h!',q:'Qual planeta tem os ventos mais fortes?',opts:['Júpiter','Saturno','Urano','Netuno'],ans:3},
+  {planet:'Júpiter',emoji:'🟠',fact:'A Grande Mancha Vermelha é uma tempestade que dura há mais de 300 anos!',q:'O que é a Grande Mancha Vermelha de Júpiter?',opts:['Um vulcão','Uma cratera','Uma tempestade gigante','Uma montanha'],ans:2},
+  {planet:'Marte',emoji:'🔴',fact:'O Monte Olimpo em Marte é o vulcão mais alto do Sistema Solar com 21 km!',q:'Onde fica o vulcão mais alto do Sistema Solar?',opts:['Na Terra','Em Vênus','Em Júpiter','Em Marte'],ans:3},
+  {planet:'Saturno',emoji:'🪐',fact:'Saturno tem pelo menos 146 luas conhecidas — a maior é Titã!',q:'Como se chama a maior lua de Saturno?',opts:['Europa','Ganimedes','Titã','Calisto'],ans:2},
+  {planet:'Terra',emoji:'🌍',fact:'A Lua é o único satélite natural da Terra e influencia as marés!',q:'Quantas luas a Terra tem?',opts:['Nenhuma','1','2','3'],ans:1},
+  {planet:'Vênus',emoji:'🌟',fact:'Um dia em Vênus dura mais que um ano venusiano! Gira muito devagar.',q:'O que é mais longo em Vênus?',opts:['O ano','O dia','A noite','São iguais'],ans:1},
+  {planet:'Mercúrio',emoji:'☿️',fact:'Apesar de perto do Sol, Mercúrio tem crateras com gelo nas sombras!',q:'O que existe nas crateras escuras de Mercúrio?',opts:['Lava','Diamantes','Gelo','Ouro'],ans:2},
+  {planet:'Netuno',emoji:'💙',fact:'Netuno foi o primeiro planeta descoberto por cálculos matemáticos, em 1846!',q:'Como Netuno foi descoberto?',opts:['Por telescópio','Por acidente','Por cálculos matemáticos','Por uma sonda'],ans:2}
+];
+
+let current=0, score=0, timer=120, timerInterval=null, answered=false;
+const $=id=>document.getElementById(id);
+
+// Create stars
+function createStars(){
+  const c=$('stars');c.innerHTML='';
+  for(let i=0;i<40;i++){
+    const s=document.createElement('div');s.className='star';
+    s.style.left=Math.random()*100+'%';s.style.top=Math.random()*100+'%';
+    s.style.animationDelay=Math.random()*2+'s';s.style.width=s.style.height=(1+Math.random()*2)+'px';
+    c.appendChild(s);
+  }
+}
+
+// Create progress dots
+function createDots(){
+  const c=$('dots');c.innerHTML='';
+  for(let i=0;i<questions.length;i++){
+    const d=document.createElement('div');d.className='pdot';c.appendChild(d);
+  }
+}
+
+function updateDots(){
+  const dots=$('dots').children;
+  for(let i=0;i<dots.length;i++){
+    dots[i].className='pdot'+(i<current?' visited':'')+(i===current?' current':'');
+  }
+}
+
+function moveRocket(){
+  const pct=current/(questions.length-1)*100;
+  $('rocket').style.left=`calc(${pct}% - 14px)`;
+}
+
+function showQuestion(){
+  const q=questions[current];
+  $('qnum').textContent=current+1;
+  $('planetEmoji').textContent=q.emoji;
+  $('planetName').textContent=q.planet;
+  $('funFact').textContent=q.fact;
+  $('question').textContent=q.q;
+  $('nextBtn').classList.add('hidden');
+  answered=false;
+
+  const opts=$('options');opts.innerHTML='';
+  q.opts.forEach((o,i)=>{
+    const b=document.createElement('button');b.className='opt';b.textContent=o;
+    b.onclick=()=>selectAnswer(i);opts.appendChild(b);
+  });
+
+  updateDots();moveRocket();
+}
+
+function selectAnswer(i){
+  if(answered)return;answered=true;
+  const q=questions[current];
+  const btns=$('options').children;
+  
+  if(i===q.ans){
+    btns[i].classList.add('ok');
+    const pts=10+Math.max(0,Math.floor(timer/10));
+    score+=pts;
+    $('score').textContent=score;
+    showBonus(`+${pts} 🎯`);
+  }else{
+    btns[i].classList.add('bad');
+    btns[q.ans].classList.add('ok');
+    showBonus('❌');
+  }
+
+  if(current<questions.length-1){
+    $('nextBtn').classList.remove('hidden');
+  }else{
+    setTimeout(endGame,1200);
+  }
+}
+
+function showBonus(text){
+  const b=document.createElement('div');b.className='bonus';b.textContent=text;
+  document.body.appendChild(b);setTimeout(()=>b.remove(),900);
+}
+
+function nextQuestion(){
+  current++;showQuestion();
+}
+
+function startTimer(){
+  timerInterval=setInterval(()=>{
+    timer--;$('time').textContent=timer;
+    if(timer<=0){clearInterval(timerInterval);endGame();}
+    if(timer<=10)$('time').style.color='#ef4444';
+  },1000);
+}
+
+function endGame(){
+  clearInterval(timerInterval);
+  $('game').classList.add('hidden');
+  $('resultCard').classList.remove('hidden');
+  $('resultScore').textContent=score+' pontos';
+
+  let emoji,title,msg;
+  if(score>=120){emoji='🌟';title='Astronauta Lendário!';msg='Você conhece o Sistema Solar como ninguém! NASA te esperando.';}
+  else if(score>=80){emoji='🚀';title='Explorador Estelar!';msg='Muito bem! Você já pode pilotar uma nave espacial.';}
+  else if(score>=40){emoji='🛸';title='Cadete Espacial!';msg='Bom começo! Continue estudando e chegará às estrelas.';}
+  else{emoji='🔭';title='Observador Iniciante';msg='O universo é imenso — jogue de novo pra aprender mais!';}
+
+  $('resultEmoji').textContent=emoji;
+  $('resultTitle').textContent=title;
+  $('resultMsg').textContent=msg;
+
+  window.parent.postMessage({type:'game-score',game:'sistema-solar',score},'*');
+}
+
+function restartGame(){
+  current=0;score=0;timer=120;answered=false;
+  $('score').textContent='0';$('time').textContent='120';$('time').style.color='';
+  $('game').classList.remove('hidden');$('resultCard').classList.add('hidden');
+  showQuestion();startTimer();
+}
+
+$('nextBtn').onclick=nextQuestion;
+createStars();createDots();showQuestion();startTimer();
+</script>
+</body>
+</html>

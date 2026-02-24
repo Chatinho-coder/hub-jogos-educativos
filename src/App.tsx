@@ -9,6 +9,7 @@ import FracoesGame from './games/FracoesGame'
 import OrtografiaGame from './games/OrtografiaGame'
 import CircuitoGame from './games/CircuitoGame'
 import VocabularioGame from './games/VocabularioGame'
+import SistemaSolarGame from './games/SistemaSolarGame'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth()
@@ -64,6 +65,11 @@ function AppRoutes() {
       <Route path="/game/vocabulario" element={
         <ProtectedRoute>
           <VocabularioGame />
+        </ProtectedRoute>
+      } />
+      <Route path="/game/sistema-solar" element={
+        <ProtectedRoute>
+          <SistemaSolarGame />
         </ProtectedRoute>
       } />
     </Routes>
