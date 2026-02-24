@@ -11,7 +11,8 @@
 *{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at top,#12203a,#0b1220 55%);color:var(--text)}
 .app{width:min(1100px,100% - 1rem);margin:auto;padding:14px 0 18px;display:grid;gap:12px}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px}
-h1,h2,p{margin:0}.muted{color:var(--muted);font-size:.9rem}
+h1,p{margin:0}.muted{color:var(--muted);font-size:.9rem}
+.tabs{display:flex;gap:10px;margin-top:12px}.tab{background:#17233a;border:1px solid #2e3f5f;color:#c7d2fe;padding:10px 14px;border-radius:10px;font-weight:800;cursor:pointer}.tab.active{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#03220f;border-color:var(--accent)}
 .row{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}.pill{background:#1a2740;border:1px solid #2c3b58;border-radius:999px;padding:6px 10px;font-size:.85rem}
 .progress{margin-top:10px;height:8px;background:#1f2b44;border-radius:999px;overflow:hidden}.progress span{display:block;height:100%;background:linear-gradient(90deg,var(--accent2),var(--accent));width:0;transition:width .25s}
 .map-wrap{margin-top:12px;background:#0f172a;border:1px solid #334155;border-radius:14px;padding:10px}
@@ -21,53 +22,77 @@ svg{width:100%;height:min(60vh,520px);display:block}.country{fill:#64748b;stroke
 .opt.ok{background:#123524;border-color:#22c55e}.opt.bad{background:#3a1b23;border-color:var(--bad)}
 .feedback{min-height:20px;margin-top:10px;color:#bbf7d0;font-size:.92rem}.next{margin-top:10px;width:100%;border:0;border-radius:10px;padding:12px;font-weight:800;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#03220f;cursor:pointer}
 .hidden{display:none!important}.center{text-align:center}
+.study-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin-top:12px}.study-item{background:#15233a;border:1px solid #2b3d5c;border-radius:12px;padding:11px}.study-country{font-weight:800;color:#86efac}.study-capital{margin-top:6px;color:#dbeafe;font-size:.93rem}
 @media(max-width:760px){.options{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
 <div class="app">
-  <div class="card" id="gameCard">
+  <div class="card" id="card">
     <h1>🌍 GeoMestre Mundo</h1>
-    <p class="muted">Mesmo estilo do GeoMestre Brasil, agora com países e capitais no mapa do mundo.</p>
+    <p class="muted">Mesmo estilo do GeoMestre Brasil, agora com países e capitais (em português).</p>
 
-    <div class="row">
-      <div class="pill">Rodada: <span id="qnum">1</span>/<span id="qtotal">12</span></div>
-      <div class="pill">Pontos: <span id="score">0</span></div>
-      <div class="pill">Erros: <span id="errors">0</span>/5</div>
-      <div class="pill">Tempo: <span id="time">180</span>s</div>
+    <div class="tabs">
+      <button class="tab active" id="studyTab">📚 Estudo</button>
+      <button class="tab" id="gameTab">🧠 Jogo</button>
     </div>
-    <div class="progress"><span id="progressBar"></span></div>
 
-    <div class="map-wrap"><div id="map"></div></div>
+    <section id="studySection">
+      <p class="muted" style="margin-top:10px">Revise países e capitais antes do quiz.</p>
+      <div class="study-grid" id="studyGrid"></div>
+    </section>
 
-    <div class="question" id="question"></div>
-    <div class="options" id="options"></div>
-    <div class="feedback" id="feedback"></div>
-    <button class="next hidden" id="nextBtn">Próxima ▶</button>
+    <section id="gameSection" class="hidden">
+      <div class="row">
+        <div class="pill">Rodada: <span id="qnum">1</span>/<span id="qtotal">12</span></div>
+        <div class="pill">Pontos: <span id="score">0</span></div>
+        <div class="pill">Erros: <span id="errors">0</span>/5</div>
+        <div class="pill">Tempo: <span id="time">180</span>s</div>
+      </div>
+      <div class="progress"><span id="progressBar"></span></div>
+      <div class="map-wrap"><div id="map"></div></div>
+      <div class="question" id="question"></div>
+      <div class="options" id="options"></div>
+      <div class="feedback" id="feedback"></div>
+      <button class="next hidden" id="nextBtn">Próxima ▶</button>
+    </section>
   </div>
 </div>
 
 <script>
 const COUNTRY_BANK = [
-  ['Brazil','Brasília'],['Argentina','Buenos Aires'],['Chile','Santiago'],['Uruguay','Montevideo'],['Paraguay','Asunción'],['Bolivia','Sucre'],['Peru','Lima'],['Colombia','Bogotá'],['Venezuela','Caracas'],['Ecuador','Quito'],
-  ['United States of America','Washington, D.C.'],['Canada','Ottawa'],['Mexico','Mexico City'],['Cuba','Havana'],
-  ['United Kingdom','London'],['France','Paris'],['Spain','Madrid'],['Portugal','Lisbon'],['Germany','Berlin'],['Italy','Rome'],['Netherlands','Amsterdam'],['Belgium','Brussels'],['Switzerland','Bern'],['Austria','Vienna'],['Poland','Warsaw'],['Sweden','Stockholm'],['Norway','Oslo'],['Finland','Helsinki'],['Greece','Athens'],
-  ['Russia','Moscow'],['Ukraine','Kyiv'],['Turkey','Ankara'],
-  ['China','Beijing'],['Japan','Tokyo'],['India','New Delhi'],['South Korea','Seoul'],['Thailand','Bangkok'],['Vietnam','Hanoi'],['Indonesia','Jakarta'],['Philippines','Manila'],
-  ['Australia','Canberra'],['New Zealand','Wellington'],
-  ['Egypt','Cairo'],['South Africa','Pretoria'],['Nigeria','Abuja'],['Kenya','Nairobi'],['Morocco','Rabat'],['Saudi Arabia','Riyadh'],['United Arab Emirates','Abu Dhabi'],['Israel','Jerusalem']
+  {en:'Brazil',pt:'Brasil',capital:'Brasília'},{en:'Argentina',pt:'Argentina',capital:'Buenos Aires'},{en:'Chile',pt:'Chile',capital:'Santiago'},{en:'Uruguay',pt:'Uruguai',capital:'Montevidéu'},{en:'Paraguay',pt:'Paraguai',capital:'Assunção'},{en:'Bolivia',pt:'Bolívia',capital:'Sucre'},{en:'Peru',pt:'Peru',capital:'Lima'},{en:'Colombia',pt:'Colômbia',capital:'Bogotá'},{en:'Venezuela',pt:'Venezuela',capital:'Caracas'},{en:'Ecuador',pt:'Equador',capital:'Quito'},
+  {en:'United States of America',pt:'Estados Unidos',capital:'Washington, D.C.'},{en:'Canada',pt:'Canadá',capital:'Ottawa'},{en:'Mexico',pt:'México',capital:'Cidade do México'},{en:'Cuba',pt:'Cuba',capital:'Havana'},
+  {en:'United Kingdom',pt:'Reino Unido',capital:'Londres'},{en:'France',pt:'França',capital:'Paris'},{en:'Spain',pt:'Espanha',capital:'Madri'},{en:'Portugal',pt:'Portugal',capital:'Lisboa'},{en:'Germany',pt:'Alemanha',capital:'Berlim'},{en:'Italy',pt:'Itália',capital:'Roma'},{en:'Netherlands',pt:'Países Baixos',capital:'Amsterdã'},{en:'Belgium',pt:'Bélgica',capital:'Bruxelas'},{en:'Switzerland',pt:'Suíça',capital:'Berna'},{en:'Austria',pt:'Áustria',capital:'Viena'},{en:'Poland',pt:'Polônia',capital:'Varsóvia'},{en:'Sweden',pt:'Suécia',capital:'Estocolmo'},{en:'Norway',pt:'Noruega',capital:'Oslo'},{en:'Finland',pt:'Finlândia',capital:'Helsinque'},{en:'Greece',pt:'Grécia',capital:'Atenas'},
+  {en:'Russia',pt:'Rússia',capital:'Moscou'},{en:'Ukraine',pt:'Ucrânia',capital:'Kiev'},{en:'Turkey',pt:'Turquia',capital:'Ancara'},
+  {en:'China',pt:'China',capital:'Pequim'},{en:'Japan',pt:'Japão',capital:'Tóquio'},{en:'India',pt:'Índia',capital:'Nova Délhi'},{en:'South Korea',pt:'Coreia do Sul',capital:'Seul'},{en:'Thailand',pt:'Tailândia',capital:'Bangcoc'},{en:'Vietnam',pt:'Vietnã',capital:'Hanói'},{en:'Indonesia',pt:'Indonésia',capital:'Jacarta'},{en:'Philippines',pt:'Filipinas',capital:'Manila'},
+  {en:'Australia',pt:'Austrália',capital:'Camberra'},{en:'New Zealand',pt:'Nova Zelândia',capital:'Wellington'},
+  {en:'Egypt',pt:'Egito',capital:'Cairo'},{en:'South Africa',pt:'África do Sul',capital:'Pretória'},{en:'Nigeria',pt:'Nigéria',capital:'Abuja'},{en:'Kenya',pt:'Quênia',capital:'Nairóbi'},{en:'Morocco',pt:'Marrocos',capital:'Rabat'},{en:'Saudi Arabia',pt:'Arábia Saudita',capital:'Riade'},{en:'United Arab Emirates',pt:'Emirados Árabes Unidos',capital:'Abu Dhabi'},{en:'Israel',pt:'Israel',capital:'Jerusalém'}
 ];
 
-const MAX_ERRORS = 5;
-const TOTAL_ROUNDS = 12;
-const GAME_TIME = 180;
+const MAX_ERRORS = 5, TOTAL_ROUNDS = 12, GAME_TIME = 180;
 const shuffle = arr => [...arr].sort(()=>Math.random()-0.5);
 const norm = s => (s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
-
-let geojson=null, featuresByName=new Map(), queue=[], idx=0, score=0, errors=0, timeLeft=GAME_TIME, timer=null, lock=false;
-let current = null;
-
+let geojson=null, featuresByName=new Map(), queue=[], idx=0, score=0, errors=0, timeLeft=GAME_TIME, timer=null, lock=false, current=null, roundData=null;
 const $ = id => document.getElementById(id);
+
+function renderStudy(){
+  const grid=$('studyGrid');
+  grid.innerHTML='';
+  COUNTRY_BANK.slice().sort((a,b)=>a.pt.localeCompare(b.pt,'pt-BR')).forEach(c=>{
+    const item=document.createElement('div'); item.className='study-item';
+    item.innerHTML=`<div class='study-country'>${c.pt}</div><div class='study-capital'>Capital: ${c.capital}</div>`;
+    grid.appendChild(item);
+  });
+}
+
+function setTab(mode){
+  const study = mode==='study';
+  $('studySection').classList.toggle('hidden',!study);
+  $('gameSection').classList.toggle('hidden',study);
+  $('studyTab').classList.toggle('active',study);
+  $('gameTab').classList.toggle('active',!study);
+}
 
 async function loadMap(){
   const res = await fetch('https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world.geojson');
@@ -80,165 +105,78 @@ async function loadMap(){
 }
 
 function buildQueue(){
-  const available = COUNTRY_BANK
-    .map(([country, capital])=>({country, capital}))
-    .filter(c=>featuresByName.has(c.country));
+  const available = COUNTRY_BANK.filter(c=>featuresByName.has(c.en));
   queue = shuffle(available).slice(0, TOTAL_ROUNDS);
 }
 
-function renderMap(highlightCountry){
+function renderMap(highlightCountryEn){
   const box = $('map'); box.innerHTML='';
   const width = box.clientWidth || 900, height = 520;
   const projection = d3.geoMercator().fitSize([width,height], geojson);
   const path = d3.geoPath(projection);
-
   const svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
   svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
-
   geojson.features.forEach(f=>{
     const p = document.createElementNS('http://www.w3.org/2000/svg','path');
     p.setAttribute('d', path(f));
-    p.setAttribute('class', 'country' + (f.properties.name===highlightCountry ? ' target' : ''));
-    p.setAttribute('aria-label', f.properties.name);
+    p.setAttribute('class', 'country' + (f.properties.name===highlightCountryEn ? ' target' : ''));
     svg.appendChild(p);
   });
-
   box.appendChild(svg);
 }
 
 function makeRound(){
   current = queue[idx];
-  const countryOpts = shuffle([current.country, ...shuffle(queue.filter(q=>q.country!==current.country)).slice(0,3).map(q=>q.country)]);
-  const capitalOpts = shuffle([current.capital, ...shuffle(COUNTRY_BANK.filter(([c,cap])=>cap!==current.capital)).slice(0,3).map(x=>x[1])]);
-  return { countryOpts, capitalOpts };
+  const countryOpts = shuffle([current.pt, ...shuffle(queue.filter(q=>q.en!==current.en)).slice(0,3).map(q=>q.pt)]);
+  const capitalOpts = shuffle([current.capital, ...shuffle(COUNTRY_BANK.filter(c=>norm(c.capital)!==norm(current.capital))).slice(0,3).map(c=>c.capital)]);
+  roundData = {countryOpts, capitalOpts, countryPicked:null, capitalPicked:null};
 }
-
-let roundData = null;
 
 function renderRound(){
-  roundData = makeRound();
-  lock = false;
-  $('qnum').textContent = idx+1;
-  $('qtotal').textContent = queue.length;
-  $('score').textContent = score;
-  $('errors').textContent = errors;
-  $('time').textContent = timeLeft;
-  $('progressBar').style.width = `${((idx)/queue.length)*100}%`;
-  $('feedback').textContent = '';
-  $('nextBtn').classList.add('hidden');
-
-  renderMap(current.country);
-
-  $('question').textContent = `País destacado no mapa: escolha o país correto e sua capital.`;
+  makeRound(); lock=false;
+  $('qnum').textContent = idx+1; $('qtotal').textContent = queue.length; $('score').textContent = score; $('errors').textContent = errors; $('time').textContent = timeLeft;
+  $('progressBar').style.width = `${(idx/queue.length)*100}%`; $('feedback').textContent=''; $('nextBtn').classList.add('hidden');
+  renderMap(current.en);
+  $('question').textContent = 'País destacado no mapa: escolha o país correto e sua capital.';
   const options = $('options'); options.innerHTML='';
-
-  const title1 = document.createElement('div');
-  title1.className='muted'; title1.style.gridColumn='1/-1'; title1.textContent='1) Qual é o país destacado?';
-  options.appendChild(title1);
-  roundData.countryOpts.forEach((op,i)=>{
-    const b=document.createElement('button'); b.className='opt'; b.textContent=op; b.onclick=()=>pickCountry(i,b); options.appendChild(b);
-  });
-
-  const title2 = document.createElement('div');
-  title2.className='muted'; title2.style.gridColumn='1/-1'; title2.style.marginTop='4px'; title2.textContent='2) Qual é a capital desse país?';
-  options.appendChild(title2);
-  roundData.capitalOpts.forEach((op,i)=>{
-    const b=document.createElement('button'); b.className='opt'; b.textContent=op; b.onclick=()=>pickCapital(i,b); options.appendChild(b);
-  });
-
-  roundData.countryPicked = null;
-  roundData.capitalPicked = null;
+  const t1=document.createElement('div'); t1.className='muted'; t1.style.gridColumn='1/-1'; t1.textContent='1) Qual é o país destacado?'; options.appendChild(t1);
+  roundData.countryOpts.forEach((op,i)=>{ const b=document.createElement('button'); b.className='opt'; b.textContent=op; b.onclick=()=>pickCountry(i,b); options.appendChild(b); });
+  const t2=document.createElement('div'); t2.className='muted'; t2.style.gridColumn='1/-1'; t2.style.marginTop='4px'; t2.textContent='2) Qual é a capital desse país?'; options.appendChild(t2);
+  roundData.capitalOpts.forEach((op,i)=>{ const b=document.createElement('button'); b.className='opt'; b.textContent=op; b.onclick=()=>pickCapital(i,b); options.appendChild(b); });
 }
 
-function pickCountry(i,btn){
-  if(lock) return;
-  roundData.countryPicked = i;
-  [...$('options').querySelectorAll('button.opt')].forEach(b=>{ if(roundData.countryOpts.includes(b.textContent)) b.style.outline='none'; });
-  btn.style.outline='2px solid #86efac';
-  tryEvaluate();
-}
-
-function pickCapital(i,btn){
-  if(lock) return;
-  roundData.capitalPicked = i;
-  [...$('options').querySelectorAll('button.opt')].forEach(b=>{ if(roundData.capitalOpts.includes(b.textContent)) b.style.outline='none'; });
-  btn.style.outline='2px solid #86efac';
-  tryEvaluate();
-}
+function pickCountry(i,btn){ if(lock) return; roundData.countryPicked=i; [...$('options').querySelectorAll('button.opt')].forEach(b=>{if(roundData.countryOpts.includes(b.textContent)) b.style.outline='none';}); btn.style.outline='2px solid #86efac'; tryEvaluate(); }
+function pickCapital(i,btn){ if(lock) return; roundData.capitalPicked=i; [...$('options').querySelectorAll('button.opt')].forEach(b=>{if(roundData.capitalOpts.includes(b.textContent)) b.style.outline='none';}); btn.style.outline='2px solid #86efac'; tryEvaluate(); }
 
 function tryEvaluate(){
   if(roundData.countryPicked==null || roundData.capitalPicked==null || lock) return;
-  lock = true;
-
-  const countryOk = roundData.countryOpts[roundData.countryPicked] === current.country;
+  lock=true;
+  const countryOk = roundData.countryOpts[roundData.countryPicked] === current.pt;
   const capitalOk = norm(roundData.capitalOpts[roundData.capitalPicked]) === norm(current.capital);
-
-  const allBtns = [...$('options').querySelectorAll('button.opt')];
-  allBtns.forEach(b=>{
-    const txt=b.textContent;
-    if(txt===current.country || norm(txt)===norm(current.capital)) b.classList.add('ok');
-  });
-
-  if(countryOk && capitalOk){
-    const pts = 25;
-    score += pts;
-    $('feedback').textContent = `✅ Boa! ${current.country} — ${current.capital}. +${pts} pontos`;
-  } else {
-    errors++;
-    const chosenCountry = roundData.countryOpts[roundData.countryPicked];
-    const chosenCapital = roundData.capitalOpts[roundData.capitalPicked];
-    allBtns.forEach(b=>{
-      if((b.textContent===chosenCountry && !countryOk) || (norm(b.textContent)===norm(chosenCapital) && !capitalOk)) b.classList.add('bad');
-    });
-    $('feedback').textContent = `❌ Correto: ${current.country} — ${current.capital}.`;
-  }
-
-  $('score').textContent = score;
-  $('errors').textContent = errors;
-  $('nextBtn').classList.remove('hidden');
-  if(errors>=MAX_ERRORS) $('nextBtn').textContent = 'Ver resultado 🏁';
-  else if(idx===queue.length-1) $('nextBtn').textContent = 'Finalizar 🏁';
+  const allBtns=[...$('options').querySelectorAll('button.opt')];
+  allBtns.forEach(b=>{const txt=b.textContent; if(txt===current.pt || norm(txt)===norm(current.capital)) b.classList.add('ok');});
+  if(countryOk && capitalOk){ score+=25; $('feedback').textContent=`✅ Boa! ${current.pt} — ${current.capital}. +25 pontos`; }
+  else { errors++; const chosenCountry=roundData.countryOpts[roundData.countryPicked], chosenCapital=roundData.capitalOpts[roundData.capitalPicked]; allBtns.forEach(b=>{ if((b.textContent===chosenCountry && !countryOk) || (norm(b.textContent)===norm(chosenCapital) && !capitalOk)) b.classList.add('bad');}); $('feedback').textContent=`❌ Correto: ${current.pt} — ${current.capital}.`; }
+  $('score').textContent=score; $('errors').textContent=errors; $('nextBtn').classList.remove('hidden');
+  if(errors>=MAX_ERRORS || idx===queue.length-1) $('nextBtn').textContent='Finalizar 🏁';
 }
 
-function nextRound(){
-  if(errors>=MAX_ERRORS || idx>=queue.length-1){ finish(); return; }
-  idx++; renderRound();
-}
-
-function finish(){
-  clearInterval(timer);
-  const final = score + Math.max(0,timeLeft);
-  $('gameCard').innerHTML = `<div class='center'><h1>🏆 Fim de jogo</h1><p class='muted' style='margin-top:8px'>GeoMestre Mundo (estilo GeoMestre Brasil)</p><div style='font-size:2.3rem;font-weight:800;color:#86efac;margin-top:10px'>${final} pontos</div><p class='muted' style='margin-top:8px'>Base: ${score} • bônus tempo: ${Math.max(0,timeLeft)} • erros: ${errors}/${MAX_ERRORS}</p><button class='next' style='margin-top:14px' onclick='location.reload()'>Jogar novamente</button></div>`;
-  window.parent.postMessage({type:'game-score',game:'geomaster-mundo',score:final},'*');
-}
-
-function startTimer(){
-  clearInterval(timer);
-  timer = setInterval(()=>{
-    timeLeft = Math.max(0,timeLeft-1);
-    $('time').textContent = timeLeft;
-    if(timeLeft<=0) finish();
-  },1000);
-}
+function nextRound(){ if(errors>=MAX_ERRORS || idx>=queue.length-1){ finish(); return; } idx++; renderRound(); }
+function finish(){ clearInterval(timer); const final=score+Math.max(0,timeLeft); $('gameSection').innerHTML=`<div class='center'><h1>🏆 Fim de jogo</h1><p class='muted' style='margin-top:8px'>GeoMestre Mundo</p><div style='font-size:2.3rem;font-weight:800;color:#86efac;margin-top:10px'>${final} pontos</div><p class='muted' style='margin-top:8px'>Base: ${score} • bônus tempo: ${Math.max(0,timeLeft)} • erros: ${errors}/${MAX_ERRORS}</p><button class='next' style='margin-top:14px' onclick='location.reload()'>Jogar novamente</button></div>`; window.parent.postMessage({type:'game-score',game:'geomaster-mundo',score:final},'*'); }
+function startTimer(){ clearInterval(timer); timer=setInterval(()=>{ if($('gameSection').classList.contains('hidden')) return; timeLeft=Math.max(0,timeLeft-1); $('time').textContent=timeLeft; if(timeLeft<=0) finish(); },1000); }
 
 async function init(){
   try{
+    renderStudy();
     await loadMap();
     buildQueue();
-    if(queue.length<8){
-      $('gameCard').innerHTML = `<h1>⚠️ Não foi possível carregar países suficientes</h1><p class='muted' style='margin-top:8px'>Tenta recarregar a página.</p>`;
-      return;
-    }
-    idx=0;score=0;errors=0;timeLeft=GAME_TIME;
-    renderRound();
-    startTimer();
-    $('nextBtn').onclick = nextRound;
-  }catch(e){
-    $('gameCard').innerHTML = `<h1>⚠️ Erro ao carregar mapa-múndi</h1><p class='muted' style='margin-top:8px'>Verifique conexão e recarregue.</p>`;
-    console.error(e);
-  }
+    if(queue.length<8){ $('gameSection').innerHTML=`<h1>⚠️ Não foi possível carregar países suficientes</h1>`; return; }
+    idx=0;score=0;errors=0;timeLeft=GAME_TIME; renderRound(); startTimer();
+    $('nextBtn').onclick=nextRound;
+    $('studyTab').onclick=()=>setTab('study');
+    $('gameTab').onclick=()=>setTab('game');
+  }catch(e){ $('gameSection').innerHTML=`<h1>⚠️ Erro ao carregar mapa-múndi</h1><p class='muted' style='margin-top:8px'>Recarregue a página.</p>`; console.error(e); }
 }
-
 init();
 </script>
 </body>
