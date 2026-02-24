@@ -63,31 +63,42 @@ svg{width:100%;height:min(60vh,520px);display:block;touch-action:none}.country{f
 </div>
 
 <script>
-const COUNTRY_BANK = [
-  {en:'Brazil',pt:'Brasil',capital:'Brasília'},{en:'Argentina',pt:'Argentina',capital:'Buenos Aires'},{en:'Chile',pt:'Chile',capital:'Santiago'},{en:'Uruguay',pt:'Uruguai',capital:'Montevidéu'},{en:'Paraguay',pt:'Paraguai',capital:'Assunção'},{en:'Bolivia',pt:'Bolívia',capital:'Sucre'},{en:'Peru',pt:'Peru',capital:'Lima'},{en:'Colombia',pt:'Colômbia',capital:'Bogotá'},{en:'Venezuela',pt:'Venezuela',capital:'Caracas'},{en:'Ecuador',pt:'Equador',capital:'Quito'},
-  {en:'United States of America',pt:'Estados Unidos',capital:'Washington, D.C.'},{en:'Canada',pt:'Canadá',capital:'Ottawa'},{en:'Mexico',pt:'México',capital:'Cidade do México'},{en:'Cuba',pt:'Cuba',capital:'Havana'},
-  {en:'United Kingdom',pt:'Reino Unido',capital:'Londres'},{en:'France',pt:'França',capital:'Paris'},{en:'Spain',pt:'Espanha',capital:'Madri'},{en:'Portugal',pt:'Portugal',capital:'Lisboa'},{en:'Germany',pt:'Alemanha',capital:'Berlim'},{en:'Italy',pt:'Itália',capital:'Roma'},{en:'Netherlands',pt:'Países Baixos',capital:'Amsterdã'},{en:'Belgium',pt:'Bélgica',capital:'Bruxelas'},{en:'Switzerland',pt:'Suíça',capital:'Berna'},{en:'Austria',pt:'Áustria',capital:'Viena'},{en:'Poland',pt:'Polônia',capital:'Varsóvia'},{en:'Sweden',pt:'Suécia',capital:'Estocolmo'},{en:'Norway',pt:'Noruega',capital:'Oslo'},{en:'Finland',pt:'Finlândia',capital:'Helsinque'},{en:'Greece',pt:'Grécia',capital:'Atenas'},
-  {en:'Russia',pt:'Rússia',capital:'Moscou'},{en:'Ukraine',pt:'Ucrânia',capital:'Kiev'},{en:'Turkey',pt:'Turquia',capital:'Ancara'},
-  {en:'China',pt:'China',capital:'Pequim'},{en:'Japan',pt:'Japão',capital:'Tóquio'},{en:'India',pt:'Índia',capital:'Nova Délhi'},{en:'South Korea',pt:'Coreia do Sul',capital:'Seul'},{en:'Thailand',pt:'Tailândia',capital:'Bangcoc'},{en:'Vietnam',pt:'Vietnã',capital:'Hanói'},{en:'Indonesia',pt:'Indonésia',capital:'Jacarta'},{en:'Philippines',pt:'Filipinas',capital:'Manila'},
-  {en:'Australia',pt:'Austrália',capital:'Camberra'},{en:'New Zealand',pt:'Nova Zelândia',capital:'Wellington'},
-  {en:'Egypt',pt:'Egito',capital:'Cairo'},{en:'South Africa',pt:'África do Sul',capital:'Pretória'},{en:'Nigeria',pt:'Nigéria',capital:'Abuja'},{en:'Kenya',pt:'Quênia',capital:'Nairóbi'},{en:'Morocco',pt:'Marrocos',capital:'Rabat'},{en:'Saudi Arabia',pt:'Arábia Saudita',capital:'Riade'},{en:'United Arab Emirates',pt:'Emirados Árabes Unidos',capital:'Abu Dhabi'},{en:'Israel',pt:'Israel',capital:'Jerusalém'}
-];
+const PRIORITY_WEIGHTS = {
+  'Brazil': 8, 'United States of America': 8, 'China': 8, 'India': 7,
+  'Russia': 7, 'Japan': 7, 'Germany': 7, 'United Kingdom': 7, 'France': 7,
+  'Canada': 6, 'Mexico': 6, 'Italy': 6, 'Spain': 6, 'Australia': 6,
+  'Argentina': 6, 'South Africa': 6, 'Turkey': 6, 'Saudi Arabia': 6,
+  'Indonesia': 6, 'South Korea': 6, 'Egypt': 5, 'Nigeria': 5
+};
+
+const COUNTRY_ALIASES = {
+  'United States': 'United States of America',
+  'Democratic Republic of the Congo': 'Democratic Republic of the Congo',
+  'Republic of the Congo': 'Republic of the Congo',
+  'Czechia': 'Czech Republic',
+  'Ivory Coast': "Cote d'Ivoire",
+  'eSwatini': 'Eswatini',
+  'Macedonia': 'North Macedonia',
+  'Palestine': 'Palestine'
+};
 
 const MAX_ERRORS = 5, TOTAL_ROUNDS = 12, GAME_TIME = 180;
 const shuffle = arr => [...arr].sort(()=>Math.random()-0.5);
 const norm = s => (s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
-let geojson=null, featuresByName=new Map(), queue=[], idx=0, score=0, errors=0, timeLeft=GAME_TIME, timer=null, lock=false, current=null, roundData=null, selectedStudyCountryEn='';
-const countryByEn = new Map(COUNTRY_BANK.map(c=>[c.en,c]));
+let geojson=null, featuresByName=new Map(), worldCountries=[], queue=[], idx=0, score=0, errors=0, timeLeft=GAME_TIME, timer=null, lock=false, current=null, roundData=null, selectedStudyCountryEn='';
 const $ = id => document.getElementById(id);
 
 function renderStudy(){
   const grid=$('studyGrid');
   grid.innerHTML='';
-  COUNTRY_BANK.slice().sort((a,b)=>a.pt.localeCompare(b.pt,'pt-BR')).forEach(c=>{
-    const item=document.createElement('div'); item.className='study-item';
-    item.innerHTML=`<div class='study-country'>${c.pt}</div><div class='study-capital'>Capital: ${c.capital}</div>`;
-    grid.appendChild(item);
-  });
+  worldCountries
+    .slice()
+    .sort((a,b)=>(a.pt||a.en).localeCompare((b.pt||b.en),'pt-BR'))
+    .forEach(c=>{
+      const item=document.createElement('div'); item.className='study-item';
+      item.innerHTML=`<div class='study-country'>${c.pt || c.en}</div><div class='study-capital'>Capital: ${c.capital}</div>`;
+      grid.appendChild(item);
+    });
 }
 
 function setTab(mode){
@@ -100,18 +111,62 @@ function setTab(mode){
 }
 
 async function loadMap(){
-  const res = await fetch('https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world.geojson');
-  geojson = await res.json();
+  const [mapRes, countriesRes] = await Promise.all([
+    fetch('https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world.geojson'),
+    fetch('https://restcountries.com/v3.1/all?fields=name,capital,translations,altSpellings')
+  ]);
+
+  geojson = await mapRes.json();
+  const countriesApi = await countriesRes.json();
+
   geojson.features = geojson.features.filter(f => {
     const name = (f?.properties?.name || '').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
     return name !== 'antarctica' && name !== 'antartida';
   });
+
   geojson.features.forEach(f=>featuresByName.set(f.properties.name, f));
+
+  const index = new Map();
+  countriesApi.forEach(c => {
+    const capital = c?.capital?.[0];
+    if(!capital) return;
+    const pt = c?.translations?.por?.common || c?.name?.common;
+    const rec = { en: c?.name?.common, pt, capital };
+    const keys = [c?.name?.common, c?.name?.official, ...(c?.altSpellings || [])].filter(Boolean);
+    keys.forEach(k => index.set(norm(k), rec));
+  });
+
+  worldCountries = geojson.features
+    .map(f => {
+      const mapName = f.properties.name;
+      const alias = COUNTRY_ALIASES[mapName];
+      const rec = index.get(norm(mapName)) || (alias ? index.get(norm(alias)) : null);
+      if(!rec) return null;
+      return { en: mapName, pt: rec.pt, capital: rec.capital, weight: PRIORITY_WEIGHTS[mapName] || 1 };
+    })
+    .filter(Boolean);
+}
+
+function weightedPick(pool){
+  const total = pool.reduce((acc,c)=>acc + (c.weight || 1), 0);
+  let r = Math.random() * total;
+  for(const c of pool){
+    r -= (c.weight || 1);
+    if(r <= 0) return c;
+  }
+  return pool[pool.length - 1];
 }
 
 function buildQueue(){
-  const available = COUNTRY_BANK.filter(c=>featuresByName.has(c.en));
-  queue = shuffle(available).slice(0, TOTAL_ROUNDS);
+  const pool = [...worldCountries];
+  const picked = [];
+  while(pool.length && picked.length < TOTAL_ROUNDS){
+    const c = weightedPick(pool);
+    picked.push(c);
+    const idx = pool.findIndex(p => p.en === c.en);
+    if(idx >= 0) pool.splice(idx, 1);
+  }
+  queue = picked;
 }
 
 function renderMap(highlightCountryEn, boxId='map', clickable=false, onCountryClick=null){
@@ -165,11 +220,11 @@ function renderMap(highlightCountryEn, boxId='map', clickable=false, onCountryCl
 function renderStudyMap(){
   renderMap(selectedStudyCountryEn, 'studyMap', true, (countryEn)=>{
     selectedStudyCountryEn = countryEn;
-    const item = countryByEn.get(countryEn);
+    const item = worldCountries.find(c => c.en === countryEn);
     if(item){
       $('studyFeedback').textContent = `🌍 ${item.pt} — capital: ${item.capital}`;
     } else {
-      $('studyFeedback').textContent = `🌍 ${countryEn} — sem capital cadastrada nesta versão.`;
+      $('studyFeedback').textContent = `🌍 ${countryEn} — capital não encontrada.`;
     }
     renderStudyMap();
   });
@@ -177,8 +232,9 @@ function renderStudyMap(){
 
 function makeRound(){
   current = queue[idx];
-  const countryOpts = shuffle([current.pt, ...shuffle(queue.filter(q=>q.en!==current.en)).slice(0,3).map(q=>q.pt)]);
-  const capitalOpts = shuffle([current.capital, ...shuffle(COUNTRY_BANK.filter(c=>norm(c.capital)!==norm(current.capital))).slice(0,3).map(c=>c.capital)]);
+  const countryPool = worldCountries.filter(q=>q.en!==current.en);
+  const countryOpts = shuffle([current.pt, ...shuffle(countryPool).slice(0,3).map(q=>q.pt)]);
+  const capitalOpts = shuffle([current.capital, ...shuffle(worldCountries.filter(c=>norm(c.capital)!==norm(current.capital))).slice(0,3).map(c=>c.capital)]);
   roundData = {countryOpts, capitalOpts, countryPicked:null, capitalPicked:null};
 }
 
@@ -217,8 +273,8 @@ function startTimer(){ clearInterval(timer); timer=setInterval(()=>{ if($('gameS
 
 async function init(){
   try{
-    renderStudy();
     await loadMap();
+    renderStudy();
     renderStudyMap();
     buildQueue();
     if(queue.length<8){ $('gameSection').innerHTML=`<h1>⚠️ Não foi possível carregar países suficientes</h1>`; return; }
