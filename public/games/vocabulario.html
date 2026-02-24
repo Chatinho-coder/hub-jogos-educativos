@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>🧠 Missão Vocabulário</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif;background:#0b1220;color:#e2e8f0;min-height:100dvh;display:flex;justify-content:center}
+    .app{width:min(720px,100%);padding:18px}
+    .card{background:#111a2c;border:1px solid #24324d;border-radius:18px;padding:16px}
+    h1{font-size:1.35rem;margin-bottom:4px}
+    .muted{color:#93a4c2;font-size:.9rem}
+    .row{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+    .pill{background:#1a2740;border:1px solid #2c3b58;border-radius:999px;padding:6px 10px;font-size:.85rem}
+    .scene{margin-top:14px;background:linear-gradient(135deg,#0f172a,#1e293b);border:1px solid #334155;border-radius:16px;padding:20px;text-align:center}
+    .scene-emoji{font-size:4rem;line-height:1}
+    .scene-text{margin-top:10px;font-size:1rem}
+    .question{margin-top:14px;font-size:1.02rem;font-weight:700}
+    .options{display:grid;grid-template-columns:1fr;gap:10px;margin-top:14px}
+    button.opt{background:#17233a;border:1px solid #2e3f5f;color:#e2e8f0;padding:12px;border-radius:12px;font-size:1rem;font-weight:700;cursor:pointer}
+    button.opt:hover{background:#1f2d4a}
+    button.opt:active{transform:scale(.98)}
+    .ok{border-color:#22c55e !important;background:#123524 !important}
+    .bad{border-color:#ef4444 !important;background:#3a1b23 !important}
+    .next{margin-top:14px;width:100%;background:#22d3ee;color:#03202a;border:none;padding:12px;border-radius:12px;font-size:1rem;font-weight:800;cursor:pointer}
+    .center{text-align:center}
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="card" id="game">
+      <h1>🧠 Missão Vocabulário</h1>
+      <div class="muted">Inglês 8+ • palavras do cotidiano com contexto visual</div>
+      <div class="row">
+        <div class="pill">Pergunta: <span id="qnum">1</span>/8</div>
+        <div class="pill">Pontos: <span id="score">0</span></div>
+      </div>
+
+      <div class="scene">
+        <div class="scene-emoji" id="emoji">🍎</div>
+        <div class="scene-text" id="sceneText">Você está no mercado vendo uma fruta.</div>
+      </div>
+
+      <div class="question" id="question">Qual é a palavra em inglês?</div>
+      <div class="options" id="options"></div>
+      <button class="next" id="nextBtn" style="display:none">Próxima ▶</button>
+    </div>
+  </div>
+
+  <script>
+    const BANK = [
+      {emoji:'🍎', scene:'Você está no mercado vendo uma fruta.', pt:'maçã', en:'apple', options:['apple','house','chair','school']},
+      {emoji:'🏠', scene:'Você chegou em casa depois da escola.', pt:'casa', en:'house', options:['street','house','book','water']},
+      {emoji:'📘', scene:'Hora da leitura na sala.', pt:'livro', en:'book', options:['teacher','book','door','window']},
+      {emoji:'🚪', scene:'Bata antes de entrar na sala.', pt:'porta', en:'door', options:['door','table','car','phone']},
+      {emoji:'💧', scene:'Você está com sede no recreio.', pt:'água', en:'water', options:['milk','water','bread','shoe']},
+      {emoji:'🍞', scene:'Café da manhã na cozinha.', pt:'pão', en:'bread', options:['bread','rice','apple','fork']},
+      {emoji:'🚗', scene:'Seu pai saiu de manhã para trabalhar.', pt:'carro', en:'car', options:['bus','car','bike','street']},
+      {emoji:'🪑', scene:'Sente-se para começar a aula.', pt:'cadeira', en:'chair', options:['chair','board','pencil','teacher']},
+      {emoji:'👩‍🏫', scene:'Ela explica a matéria na frente da turma.', pt:'professora', en:'teacher', options:['student','teacher','mother','doctor']},
+      {emoji:'🧒', scene:'Quem está aprendendo na escola?', pt:'aluno', en:'student', options:['student','driver','teacher','friend']},
+      {emoji:'🛣️', scene:'Você anda por ela para chegar na escola.', pt:'rua', en:'street', options:['street','home','notebook','water']},
+      {emoji:'🏫', scene:'Lugar onde você estuda.', pt:'escola', en:'school', options:['school','market','hospital','park']}
+    ];
+
+    let questions = [];
+    let index = 0;
+    let score = 0;
+    let locked = false;
+
+    const qnum = document.getElementById('qnum');
+    const scoreEl = document.getElementById('score');
+    const emojiEl = document.getElementById('emoji');
+    const sceneText = document.getElementById('sceneText');
+    const questionEl = document.getElementById('question');
+    const optionsEl = document.getElementById('options');
+    const nextBtn = document.getElementById('nextBtn');
+    const game = document.getElementById('game');
+
+    function shuffle(arr){ return [...arr].sort(() => Math.random() - 0.5); }
+
+    function start(){
+      questions = shuffle(BANK).slice(0,8).map(q => ({...q, options: shuffle(q.options)}));
+      index = 0; score = 0; locked = false;
+      render();
+    }
+
+    function render(){
+      const q = questions[index];
+      qnum.textContent = index + 1;
+      scoreEl.textContent = score;
+      emojiEl.textContent = q.emoji;
+      sceneText.textContent = q.scene;
+      questionEl.textContent = `"${q.pt}" em inglês é:`;
+      optionsEl.innerHTML = '';
+      nextBtn.style.display = 'none';
+      locked = false;
+
+      q.options.forEach(opt => {
+        const btn = document.createElement('button');
+        btn.className = 'opt';
+        btn.textContent = opt;
+        btn.onclick = () => answer(btn, opt, q.en);
+        optionsEl.appendChild(btn);
+      });
+    }
+
+    function answer(btn, chosen, correct){
+      if(locked) return;
+      locked = true;
+      const all = [...document.querySelectorAll('.opt')];
+      all.forEach(b => b.disabled = true);
+
+      if(chosen === correct){
+        btn.classList.add('ok');
+        score += 10;
+        scoreEl.textContent = score;
+      } else {
+        btn.classList.add('bad');
+        const right = all.find(b => b.textContent === correct);
+        if(right) right.classList.add('ok');
+      }
+
+      nextBtn.style.display = 'block';
+    }
+
+    nextBtn.onclick = () => {
+      index++;
+      if(index >= questions.length){
+        finish();
+      } else {
+        render();
+      }
+    };
+
+    function finish(){
+      game.innerHTML = `
+        <div class="center">
+          <h1>🎉 Missão completa!</h1>
+          <p class="muted" style="margin-top:8px">Mandou bem no vocabulário do dia a dia.</p>
+          <div class="scene" style="margin-top:16px">
+            <div class="scene-emoji">🏆</div>
+            <div class="scene-text">Pontuação final: <strong>${score}</strong></div>
+          </div>
+          <button class="next" style="margin-top:16px" onclick="location.reload()">Jogar de novo</button>
+        </div>
+      `;
+
+      try {
+        window.parent.postMessage({ type: 'game-score', game: 'vocabulario', score }, '*');
+      } catch (e) {
+        console.warn('Falha ao enviar score', e);
+      }
+    }
+
+    start();
+  </script>
+</body>
+</html>

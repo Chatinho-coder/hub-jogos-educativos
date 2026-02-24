@@ -10,7 +10,8 @@ const gameInfo: { [key: string]: { name: string; emoji: string; color: string } 
   geografia: { name: 'GeoMestre Brasil', emoji: '🗺️', color: '#10B981' },
   fracoes: { name: 'Pizzaria das Frações', emoji: '🍕', color: '#F97316' },
   ortografia: { name: 'Detetive da Ortografia', emoji: '🔍', color: '#F59E0B' },
-  circuito: { name: 'Circuito Lógico', emoji: '⚡', color: '#3B82F6' }
+  circuito: { name: 'Circuito Lógico', emoji: '⚡', color: '#3B82F6' },
+  vocabulario: { name: 'Missão Vocabulário', emoji: '🧠', color: '#06B6D4' }
 }
 
 export default function Leaderboard() {

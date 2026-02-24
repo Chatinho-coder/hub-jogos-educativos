@@ -58,6 +58,17 @@ const games = [
     colorLight: '#93C5FD',
     bg: 'linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%)',
     tag: 'Lógica'
+  },
+  {
+    id: 'vocabulario',
+    title: 'Missão Vocabulário',
+    emoji: '🧠',
+    subtitle: 'Inglês & Dia a dia',
+    description: 'Aprenda palavras em inglês com cenas visuais do cotidiano: casa, escola, mercado e cidade.',
+    color: '#06B6D4',
+    colorLight: '#67E8F9',
+    bg: 'linear-gradient(135deg, #22d3ee 0%, #0ea5e9 100%)',
+    tag: 'Inglês'
   }
 ]
 
