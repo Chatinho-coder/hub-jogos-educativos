@@ -72,6 +72,10 @@ const $ = id => document.getElementById(id);
 async function loadMap(){
   const res = await fetch('https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world.geojson');
   geojson = await res.json();
+  geojson.features = geojson.features.filter(f => {
+    const name = (f?.properties?.name || '').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+    return name !== 'antarctica' && name !== 'antartida';
+  });
   geojson.features.forEach(f=>featuresByName.set(f.properties.name, f));
 }
 
