@@ -49,6 +49,17 @@ const games = [
     tag: 'Geografia'
   },
   {
+    id: 'geomaster-mundo',
+    title: 'GeoMestre Mundo',
+    emoji: '🌍',
+    subtitle: 'Países & Capitais',
+    description: 'Treine países e capitais do mundo com perguntas dinâmicas e ranking de pontuação.',
+    color: '#22C55E',
+    colorLight: '#86EFAC',
+    bg: 'linear-gradient(135deg, #166534 0%, #22c55e 100%)',
+    tag: 'Geografia'
+  },
+  {
     id: 'circuito',
     title: 'Circuito Lógico',
     emoji: '⚡',

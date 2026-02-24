@@ -5,6 +5,7 @@ import Hub from './pages/Hub'
 import Leaderboard from './pages/Leaderboard'
 import TabuadaGame from './games/TabuadaGame'
 import GeografiaGame from './games/GeografiaGame'
+import GeoMasterMundoGame from './games/GeoMasterMundoGame'
 import FracoesGame from './games/FracoesGame'
 import OrtografiaGame from './games/OrtografiaGame'
 import CircuitoGame from './games/CircuitoGame'
@@ -47,6 +48,11 @@ function AppRoutes() {
       <Route path="/game/geografia" element={
         <ProtectedRoute>
           <GeografiaGame />
+        </ProtectedRoute>
+      } />
+      <Route path="/game/geomaster-mundo" element={
+        <ProtectedRoute>
+          <GeoMasterMundoGame />
         </ProtectedRoute>
       } />
       <Route path="/game/fracoes" element={
