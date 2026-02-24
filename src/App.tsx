@@ -9,6 +9,8 @@ import FracoesGame from './games/FracoesGame'
 import OrtografiaGame from './games/OrtografiaGame'
 import CircuitoGame from './games/CircuitoGame'
 import VocabularioGame from './games/VocabularioGame'
+import LinhaDoTempoGame from './games/LinhaDoTempoGame'
+import UnidadesGame from './games/UnidadesGame'
 import SistemaSolarGame from './games/SistemaSolarGame'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -65,6 +67,16 @@ function AppRoutes() {
       <Route path="/game/vocabulario" element={
         <ProtectedRoute>
           <VocabularioGame />
+        </ProtectedRoute>
+      } />
+      <Route path="/game/linha-do-tempo" element={
+        <ProtectedRoute>
+          <LinhaDoTempoGame />
+        </ProtectedRoute>
+      } />
+      <Route path="/game/unidades" element={
+        <ProtectedRoute>
+          <UnidadesGame />
         </ProtectedRoute>
       } />
       <Route path="/game/sistema-solar" element={

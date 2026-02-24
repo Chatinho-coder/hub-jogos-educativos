@@ -71,6 +71,28 @@ const games = [
     tag: 'Inglês'
   },
   {
+    id: 'linha-do-tempo',
+    title: 'Linha do Tempo',
+    emoji: '📜',
+    subtitle: 'História & Sequência',
+    description: 'Estude eventos históricos e treine a ordem cronológica em desafios de arrastar e escolher.',
+    color: '#14B8A6',
+    colorLight: '#5EEAD4',
+    bg: 'linear-gradient(135deg, #0f766e 0%, #14b8a6 100%)',
+    tag: 'História'
+  },
+  {
+    id: 'unidades',
+    title: 'Laboratório de Unidades',
+    emoji: '🧪',
+    subtitle: 'Medidas & Conversão',
+    description: 'Aprenda e pratique conversões de comprimento, massa, volume e tempo com situações do dia a dia.',
+    color: '#F43F5E',
+    colorLight: '#FDA4AF',
+    bg: 'linear-gradient(135deg, #be123c 0%, #f43f5e 100%)',
+    tag: 'Matemática'
+  },
+  {
     id: 'sistema-solar',
     title: 'Aventura no Sistema Solar',
     emoji: '🚀',
