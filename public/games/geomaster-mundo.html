@@ -16,7 +16,7 @@ h1,p{margin:0}.muted{color:var(--muted);font-size:.9rem}
 .progress{margin-top:10px;height:8px;background:#1f2b44;border-radius:999px;overflow:hidden}.progress span{display:block;height:100%;background:linear-gradient(90deg,var(--accent2),var(--accent));width:0;transition:width .25s}
 .map-wrap{margin-top:12px;background:#0f172a;border:1px solid #334155;border-radius:14px;padding:10px;overflow:hidden}
 .map-hint{margin-top:6px;color:#93a4c2;font-size:.8rem}
-svg{width:100%;height:min(60vh,520px);display:block;touch-action:none}.country{fill:#64748b;stroke:#0f172a;stroke-width:.45}.country:hover{fill:#93a4c2}.country.target{fill:#86efac;stroke:#14532d;stroke-width:1}
+svg{width:100%;height:min(60vh,520px);display:block;touch-action:none}.country{fill:#64748b;stroke:#0f172a;stroke-width:.45;cursor:pointer}.country:hover{fill:#93a4c2}.country.target,.country.study-selected{fill:#86efac;stroke:#14532d;stroke-width:1}
 .question{margin-top:12px;font-size:1.02rem;font-weight:700}.options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:10px}
 .opt{background:#17233a;border:1px solid #2e3f5f;color:var(--text);padding:11px;border-radius:10px;font-weight:700;text-align:left;cursor:pointer}.opt:hover{background:#1f2d4a}
 .opt.ok{background:#123524;border-color:#22c55e}.opt.bad{background:#3a1b23;border-color:var(--bad)}
@@ -39,6 +39,8 @@ svg{width:100%;height:min(60vh,520px);display:block;touch-action:none}.country{f
 
     <section id="studySection">
       <p class="muted" style="margin-top:10px">Revise países e capitais antes do quiz.</p>
+      <div class="map-wrap" style="margin-top:10px"><div id="studyMap"></div></div>
+      <div class="feedback" id="studyFeedback" style="margin-top:8px">Toque em um país no mapa para ver nome e capital.</div>
       <div class="study-grid" id="studyGrid"></div>
     </section>
 
@@ -74,7 +76,8 @@ const COUNTRY_BANK = [
 const MAX_ERRORS = 5, TOTAL_ROUNDS = 12, GAME_TIME = 180;
 const shuffle = arr => [...arr].sort(()=>Math.random()-0.5);
 const norm = s => (s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
-let geojson=null, featuresByName=new Map(), queue=[], idx=0, score=0, errors=0, timeLeft=GAME_TIME, timer=null, lock=false, current=null, roundData=null;
+let geojson=null, featuresByName=new Map(), queue=[], idx=0, score=0, errors=0, timeLeft=GAME_TIME, timer=null, lock=false, current=null, roundData=null, selectedStudyCountryEn='';
+const countryByEn = new Map(COUNTRY_BANK.map(c=>[c.en,c]));
 const $ = id => document.getElementById(id);
 
 function renderStudy(){
@@ -93,6 +96,7 @@ function setTab(mode){
   $('gameSection').classList.toggle('hidden',study);
   $('studyTab').classList.toggle('active',study);
   $('gameTab').classList.toggle('active',!study);
+  if(study) setTimeout(()=>renderStudyMap(), 0);
 }
 
 async function loadMap(){
@@ -110,8 +114,8 @@ function buildQueue(){
   queue = shuffle(available).slice(0, TOTAL_ROUNDS);
 }
 
-function renderMap(highlightCountryEn){
-  const box = $('map'); box.innerHTML='';
+function renderMap(highlightCountryEn, boxId='map', clickable=false, onCountryClick=null){
+  const box = $(boxId); box.innerHTML='';
   const isMobile = window.matchMedia('(max-width: 760px)').matches;
   const viewportWidth = box.clientWidth || 900;
   const width = isMobile ? Math.max(Math.round(viewportWidth * 1.65), 980) : viewportWidth;
@@ -132,7 +136,15 @@ function renderMap(highlightCountryEn){
     .enter()
     .append('path')
     .attr('d', path)
-    .attr('class', d => 'country' + (d.properties.name===highlightCountryEn ? ' target' : ''));
+    .attr('class', d => {
+      const marked = d.properties.name===highlightCountryEn;
+      if(boxId==='studyMap') return 'country' + (marked ? ' study-selected' : '');
+      return 'country' + (marked ? ' target' : '');
+    })
+    .on('click', (event, d) => {
+      if(!clickable || !onCountryClick) return;
+      onCountryClick(d.properties.name);
+    });
 
   const zoom = d3.zoom()
     .scaleExtent([1, 10])
@@ -148,6 +160,19 @@ function renderMap(highlightCountryEn){
     const y = -(height * (startScale - 1) / 2) - 28;
     svg.call(zoom.transform, d3.zoomIdentity.translate(x, y).scale(startScale));
   }
+}
+
+function renderStudyMap(){
+  renderMap(selectedStudyCountryEn, 'studyMap', true, (countryEn)=>{
+    selectedStudyCountryEn = countryEn;
+    const item = countryByEn.get(countryEn);
+    if(item){
+      $('studyFeedback').textContent = `🌍 ${item.pt} — capital: ${item.capital}`;
+    } else {
+      $('studyFeedback').textContent = `🌍 ${countryEn} — sem capital cadastrada nesta versão.`;
+    }
+    renderStudyMap();
+  });
 }
 
 function makeRound(){
@@ -194,6 +219,7 @@ async function init(){
   try{
     renderStudy();
     await loadMap();
+    renderStudyMap();
     buildQueue();
     if(queue.length<8){ $('gameSection').innerHTML=`<h1>⚠️ Não foi possível carregar países suficientes</h1>`; return; }
     idx=0;score=0;errors=0;timeLeft=GAME_TIME; renderRound(); startTimer();
