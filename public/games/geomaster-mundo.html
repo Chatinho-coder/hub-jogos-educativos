@@ -135,7 +135,7 @@ function renderMap(highlightCountryEn){
     .attr('class', d => 'country' + (d.properties.name===highlightCountryEn ? ' target' : ''));
 
   const zoom = d3.zoom()
-    .scaleExtent([1, 5])
+    .scaleExtent([1, 10])
     .on('zoom', (event) => {
       layer.attr('transform', event.transform);
     });
@@ -143,9 +143,9 @@ function renderMap(highlightCountryEn){
   svg.call(zoom);
 
   if(isMobile){
-    const startScale = 1.28;
+    const startScale = 1.9;
     const x = -(width * (startScale - 1) / 2);
-    const y = -(height * (startScale - 1) / 2) - 8;
+    const y = -(height * (startScale - 1) / 2) - 28;
     svg.call(zoom.transform, d3.zoomIdentity.translate(x, y).scale(startScale));
   }
 }
