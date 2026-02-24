@@ -3,16 +3,16 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>📜 Linha do Tempo</title>
+  <title>📜 Linha do Tempo do Brasil</title>
   <style>
     *{box-sizing:border-box;margin:0;padding:0}
     body{font-family:Inter,system-ui,sans-serif;background:#0b1220;color:#e2e8f0;display:flex;justify-content:center;min-height:100dvh}
-    .app{width:min(820px,100%);padding:18px}.card{background:#111a2c;border:1px solid #24324d;border-radius:18px;padding:16px}
+    .app{width:min(900px,100%);padding:18px}.card{background:#111a2c;border:1px solid #24324d;border-radius:18px;padding:16px}
     h1{font-size:1.3rem}.muted{color:#93a4c2;font-size:.9rem;margin-top:4px}
     .tabs{display:flex;gap:10px;margin-top:14px}.tab{background:#17233a;border:1px solid #2e3f5f;color:#c7d2fe;padding:10px 14px;border-radius:10px;font-weight:800;cursor:pointer}
     .tab.active{background:linear-gradient(135deg,#14b8a6,#0f766e);color:#fff;border-color:#14b8a6}
     .hidden{display:none!important}.section{margin-top:16px}
-    .study-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px}
+    .study-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px}
     .item{background:#15233a;border:1px solid #2b3d5c;border-radius:12px;padding:12px}
     .year{font-weight:800;color:#5eead4}.title{margin-top:6px;font-weight:700}.desc{margin-top:6px;color:#cbd5e1;font-size:.9rem;line-height:1.4}
     .row{display:flex;gap:10px;flex-wrap:wrap}.pill{background:#1a2740;border:1px solid #2c3b58;border-radius:999px;padding:6px 10px;font-size:.85rem}
@@ -24,8 +24,8 @@
 </head>
 <body>
 <div class="app"><div class="card">
-  <h1>📜 Linha do Tempo</h1>
-  <p class="muted">História 9+ • estude eventos e teste ordem cronológica</p>
+  <h1>📜 Linha do Tempo do Brasil</h1>
+  <p class="muted">História do Brasil 9+ • estude eventos e teste ordem cronológica</p>
   <div class="tabs">
     <button class="tab active" id="studyBtn">📚 Estudo</button>
     <button class="tab" id="quizBtn">🧠 Jogo</button>
@@ -36,9 +36,9 @@
   <section class="section hidden" id="quizSec">
     <div id="quizWrap">
       <div class="row">
-        <div class="pill">Pergunta: <span id="qnum">1</span>/12</div>
+        <div class="pill">Pergunta: <span id="qnum">1</span>/18</div>
         <div class="pill">Pontos: <span id="score">0</span></div>
-        <div class="pill">Tempo: <span id="time">180</span>s</div>
+        <div class="pill">Tempo: <span id="time">200</span>s</div>
       </div>
       <div class="question" id="question"></div>
       <div class="options" id="options"></div>
@@ -49,30 +49,44 @@
 </div></div>
 <script>
 const STUDY=[
-  {y:1500,t:'Chegada dos portugueses ao Brasil',d:'Início oficial da colonização portuguesa no território brasileiro.'},
-  {y:1822,t:'Independência do Brasil',d:'Dom Pedro I proclamou a independência em 7 de setembro.'},
-  {y:1888,t:'Lei Áurea',d:'A escravidão foi oficialmente abolida no Brasil.'},
-  {y:1889,t:'Proclamação da República',d:'Fim do Império e início da República no Brasil.'},
-  {y:1914,t:'Início da Primeira Guerra Mundial',d:'Conflito global que durou até 1918.'},
-  {y:1939,t:'Início da Segunda Guerra Mundial',d:'Conflito mundial que terminou em 1945.'},
-  {y:1969,t:'Primeiro homem na Lua',d:'Neil Armstrong pisou na Lua na missão Apollo 11.'},
-  {y:1989,t:'Queda do Muro de Berlim',d:'Marco simbólico do fim da Guerra Fria.'}
+  {y:1500,t:'Chegada dos portugueses',d:'Expedição de Pedro Álvares Cabral chega ao território que viria a ser o Brasil.'},
+  {y:1549,t:'Governo-Geral',d:'Tomé de Sousa assume como primeiro governador-geral para centralizar a administração colonial.'},
+  {y:1693,t:'Ciclo do ouro',d:'Descobertas de ouro em Minas Gerais mudam economia e ocupação do território.'},
+  {y:1789,t:'Inconfidência Mineira',d:'Movimento contra a Coroa portuguesa; Tiradentes torna-se símbolo histórico.'},
+  {y:1808,t:'Chegada da família real',d:'A corte portuguesa vem para o Rio de Janeiro, transformando a colônia.'},
+  {y:1822,t:'Independência do Brasil',d:'Dom Pedro I proclama a independência em 7 de setembro.'},
+  {y:1888,t:'Lei Áurea',d:'A escravidão é oficialmente abolida no Brasil.'},
+  {y:1889,t:'Proclamação da República',d:'Fim da monarquia e início do período republicano.'},
+  {y:1930,t:'Era Vargas começa',d:'Getúlio Vargas chega ao poder após a Revolução de 1930.'},
+  {y:1960,t:'Inauguração de Brasília',d:'A nova capital federal é inaugurada no Planalto Central.'},
+  {y:1964,t:'Início da ditadura militar',d:'Golpe militar inicia período autoritário no país.'},
+  {y:1985,t:'Redemocratização',d:'Fim do regime militar e retorno do governo civil.'},
+  {y:1988,t:'Constituição Cidadã',d:'Promulgação da Constituição Federal atualmente em vigor.'},
+  {y:1994,t:'Plano Real',d:'Nova moeda e medidas econômicas reduzem hiperinflação.'}
 ];
+
 const QUESTIONS=[
- {q:'O que aconteceu primeiro?',opts:['Independência do Brasil','Lei Áurea','Proclamação da República','Chegada dos portugueses ao Brasil'],ans:3,exp:'1500 vem antes de 1822, 1888 e 1889.'},
- {q:'Qual evento veio depois da Lei Áurea?',opts:['Proclamação da República','Chegada dos portugueses','Independência do Brasil','Primeira Guerra Mundial'],ans:0,exp:'Lei Áurea (1888) foi seguida pela República (1889).'},
- {q:'Qual ocorreu antes: Primeira ou Segunda Guerra Mundial?',opts:['Segunda','Primeira','Empate','Nenhuma'],ans:1,exp:'A Primeira Guerra começou em 1914, antes de 1939.'},
- {q:'Em ordem correta (mais antigo → mais recente):',opts:['1889, 1822, 1888','1822, 1888, 1889','1888, 1822, 1889','1822, 1889, 1888'],ans:1,exp:'1822 → 1888 → 1889.'},
- {q:'Qual evento é de 1969?',opts:['Queda do Muro de Berlim','Primeiro homem na Lua','Lei Áurea','Segunda Guerra'],ans:1,exp:'Apollo 11 foi em 1969.'},
- {q:'O evento mais recente da lista é:',opts:['Primeira Guerra Mundial','Proclamação da República','Queda do Muro de Berlim','Independência do Brasil'],ans:2,exp:'1989 é o ano mais recente entre essas opções.'},
- {q:'Qual veio primeiro: Independência ou República?',opts:['República','Independência','Mesma data','Nenhuma'],ans:1,exp:'Independência (1822) antecede República (1889).'},
- {q:'Abolição da escravidão ocorreu em:',opts:['1500','1822','1888','1889'],ans:2,exp:'Lei Áurea foi em 1888.'},
- {q:'Qual sequência está correta?',opts:['1500 → 1822 → 1888','1888 → 1822 → 1500','1822 → 1500 → 1889','1889 → 1888 → 1822'],ans:0,exp:'Essa segue a ordem cronológica correta.'},
- {q:'A Queda do Muro de Berlim foi:',opts:['Antes da ida à Lua','No mesmo ano da Lei Áurea','Depois da ida à Lua','Antes da Primeira Guerra'],ans:2,exp:'1969 (Lua) veio antes de 1989 (Muro).'},
- {q:'Qual aconteceu entre 1888 e 1914?',opts:['Proclamação da República','Chegada dos portugueses','Segunda Guerra','Queda do Muro'],ans:0,exp:'República foi em 1889.'},
- {q:'Evento mais antigo da lista:',opts:['Proclamação da República','Chegada dos portugueses ao Brasil','Independência do Brasil','Primeira Guerra Mundial'],ans:1,exp:'1500 é a data mais antiga da lista.'}
+  {q:'Qual evento aconteceu primeiro?',opts:['Independência do Brasil','Lei Áurea','Chegada dos portugueses','Proclamação da República'],ans:2,exp:'1500 é anterior aos demais eventos.'},
+  {q:'Qual veio logo depois da Lei Áurea (1888)?',opts:['Proclamação da República','Plano Real','Início da ditadura militar','Chegada da família real'],ans:0,exp:'A República foi proclamada em 1889.'},
+  {q:'Em que ano ocorreu a Independência do Brasil?',opts:['1808','1822','1889','1930'],ans:1,exp:'A independência foi proclamada em 1822.'},
+  {q:'O que ocorreu em 1888?',opts:['Constituição Cidadã','Lei Áurea','Inauguração de Brasília','Plano Real'],ans:1,exp:'1888 marca a abolição da escravidão.'},
+  {q:'A ordem correta é:',opts:['1500 → 1808 → 1822','1808 → 1500 → 1822','1822 → 1808 → 1889','1889 → 1888 → 1822'],ans:0,exp:'Essa sequência está cronologicamente correta.'},
+  {q:'Qual evento está ligado a Tiradentes?',opts:['Plano Real','Inconfidência Mineira','Era Vargas','Constituição de 1988'],ans:1,exp:'Tiradentes é símbolo da Inconfidência Mineira.'},
+  {q:'Brasília foi inaugurada em:',opts:['1930','1960','1964','1988'],ans:1,exp:'A capital foi inaugurada em 1960.'},
+  {q:'Qual veio antes?',opts:['Ditadura militar (1964)','Era Vargas (1930)','Constituição (1988)','Plano Real (1994)'],ans:1,exp:'1930 ocorre antes de 1964, 1988 e 1994.'},
+  {q:'Redemocratização aconteceu em:',opts:['1985','1964','1994','1889'],ans:0,exp:'1985 marca o fim do regime militar.'},
+  {q:'Constituição Cidadã é de:',opts:['1985','1988','1994','1930'],ans:1,exp:'A Constituição atual foi promulgada em 1988.'},
+  {q:'Plano Real foi lançado em:',opts:['1988','1960','1994','1930'],ans:2,exp:'O Plano Real foi implementado em 1994.'},
+  {q:'O que aconteceu em 1808?',opts:['Chegada da família real','Independência','Lei Áurea','Proclamação da República'],ans:0,exp:'A corte portuguesa veio para o Brasil em 1808.'},
+  {q:'Qual evento é mais antigo?',opts:['Governo-Geral','Chegada dos portugueses','Ciclo do ouro','Inconfidência Mineira'],ans:1,exp:'Chegada dos portugueses em 1500.'},
+  {q:'Ciclo do ouro ganhou força em qual período?',opts:['Século XVI','Final do século XVII','Década de 1990','Após 1960'],ans:1,exp:'As descobertas principais ocorreram no fim do séc. XVII.'},
+  {q:'A sequência correta é:',opts:['1889 → 1930 → 1964','1964 → 1930 → 1988','1930 → 1889 → 1985','1988 → 1985 → 1994'],ans:0,exp:'República, Era Vargas e ditadura nessa ordem.'},
+  {q:'Qual veio depois de 1985?',opts:['Início da ditadura militar','Constituição Cidadã','Inauguração de Brasília','Chegada dos portugueses'],ans:1,exp:'Após 1985 veio a Constituição de 1988.'},
+  {q:'Qual é o evento mais recente entre estes?',opts:['Lei Áurea','Plano Real','Proclamação da República','Independência'],ans:1,exp:'1994 é o mais recente entre eles.'},
+  {q:'A Proclamação da República ocorreu no século:',opts:['XVIII','XIX','XX','XXI'],ans:1,exp:'1889 pertence ao século XIX.'}
 ];
-let i=0,s=0,t=180,lock=false,int=null;const $=id=>document.getElementById(id);
+
+let i=0,s=0,t=200,lock=false,int=null;const $=id=>document.getElementById(id);
 function renderStudy(){const g=$('studyGrid');g.innerHTML='';STUDY.forEach(e=>{const c=document.createElement('div');c.className='item';c.innerHTML=`<div class='year'>${e.y}</div><div class='title'>${e.t}</div><div class='desc'>${e.d}</div>`;g.appendChild(c)})}
 function tab(m){$('studySec').classList.toggle('hidden',m!=='study');$('quizSec').classList.toggle('hidden',m!=='quiz');$('studyBtn').classList.toggle('active',m==='study');$('quizBtn').classList.toggle('active',m==='quiz')}
 function q(){const cur=QUESTIONS[i];$('qnum').textContent=i+1;$('score').textContent=s;$('question').textContent=cur.q;$('feedback').textContent='';$('nextBtn').classList.add('hidden');lock=false;const o=$('options');o.innerHTML='';cur.opts.forEach((op,idx)=>{const b=document.createElement('button');b.className='opt';b.textContent=op;b.onclick=()=>a(idx);o.appendChild(b)})}
