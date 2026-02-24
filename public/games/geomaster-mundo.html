@@ -1,106 +1,241 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>🌍 GeoMestre Mundo</title>
-  <style>
-    *{box-sizing:border-box;margin:0;padding:0}
-    body{font-family:Inter,system-ui,sans-serif;background:#0b1220;color:#e2e8f0;display:flex;justify-content:center;min-height:100dvh}
-    .app{width:min(850px,100%);padding:18px}.card{background:#111a2c;border:1px solid #24324d;border-radius:18px;padding:16px}
-    h1{font-size:1.35rem}.muted{color:#93a4c2;font-size:.9rem;margin-top:4px}
-    .row{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}.pill{background:#1a2740;border:1px solid #2c3b58;border-radius:999px;padding:6px 10px;font-size:.85rem}
-    .question{margin-top:14px;font-size:1.05rem;font-weight:700}
-    .options{display:grid;gap:10px;margin-top:12px}
-    .opt{background:#17233a;border:1px solid #2e3f5f;color:#e2e8f0;padding:12px;border-radius:10px;text-align:left;font-weight:700;cursor:pointer}
-    .opt:hover{background:#1f2d4a}.ok{background:#123524;border-color:#22c55e}.bad{background:#3a1b23;border-color:#ef4444}
-    .feedback{margin-top:10px;color:#bbf7d0;font-size:.92rem;line-height:1.45}
-    .next{margin-top:12px;width:100%;padding:12px;border:0;border-radius:10px;background:#22c55e;color:#062812;font-weight:800;cursor:pointer}
-    .hidden{display:none!important}.result{text-align:center;padding:22px 0}.score{font-size:2.3rem;font-weight:800;color:#86efac;margin-top:8px}
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>GeoMestre Mundo</title>
+<script src="https://cdn.jsdelivr.net/npm/d3-array@3"></script>
+<script src="https://cdn.jsdelivr.net/npm/d3-geo@3"></script>
+<style>
+:root{font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif;--bg:#0b1220;--panel:#111a2c;--line:#24324d;--text:#e2e8f0;--muted:#93a4c2;--accent:#22c55e;--accent2:#16a34a;--bad:#ef4444}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at top,#12203a,#0b1220 55%);color:var(--text)}
+.app{width:min(1100px,100% - 1rem);margin:auto;padding:14px 0 18px;display:grid;gap:12px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px}
+h1,h2,p{margin:0}.muted{color:var(--muted);font-size:.9rem}
+.row{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}.pill{background:#1a2740;border:1px solid #2c3b58;border-radius:999px;padding:6px 10px;font-size:.85rem}
+.progress{margin-top:10px;height:8px;background:#1f2b44;border-radius:999px;overflow:hidden}.progress span{display:block;height:100%;background:linear-gradient(90deg,var(--accent2),var(--accent));width:0;transition:width .25s}
+.map-wrap{margin-top:12px;background:#0f172a;border:1px solid #334155;border-radius:14px;padding:10px}
+svg{width:100%;height:min(60vh,520px);display:block}.country{fill:#64748b;stroke:#0f172a;stroke-width:.45}.country:hover{fill:#93a4c2}.country.target{fill:#86efac;stroke:#14532d;stroke-width:1}
+.question{margin-top:12px;font-size:1.02rem;font-weight:700}.options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:10px}
+.opt{background:#17233a;border:1px solid #2e3f5f;color:var(--text);padding:11px;border-radius:10px;font-weight:700;text-align:left;cursor:pointer}.opt:hover{background:#1f2d4a}
+.opt.ok{background:#123524;border-color:#22c55e}.opt.bad{background:#3a1b23;border-color:var(--bad)}
+.feedback{min-height:20px;margin-top:10px;color:#bbf7d0;font-size:.92rem}.next{margin-top:10px;width:100%;border:0;border-radius:10px;padding:12px;font-weight:800;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#03220f;cursor:pointer}
+.hidden{display:none!important}.center{text-align:center}
+@media(max-width:760px){.options{grid-template-columns:1fr}}
+</style>
 </head>
 <body>
-<div class="app"><div class="card" id="gameCard">
-  <h1>🌍 GeoMestre Mundo</h1>
-  <p class="muted">Geografia 9+ • países e capitais</p>
-  <div class="row">
-    <div class="pill">Pergunta: <span id="qnum">1</span>/<span id="qtotal">15</span></div>
-    <div class="pill">Pontos: <span id="score">0</span></div>
-    <div class="pill">Tempo: <span id="time">180</span>s</div>
-  </div>
+<div class="app">
+  <div class="card" id="gameCard">
+    <h1>🌍 GeoMestre Mundo</h1>
+    <p class="muted">Mesmo estilo do GeoMestre Brasil, agora com países e capitais no mapa do mundo.</p>
 
-  <div class="question" id="question"></div>
-  <div class="options" id="options"></div>
-  <div class="feedback" id="feedback"></div>
-  <button class="next hidden" id="nextBtn">Próxima ▶</button>
-</div></div>
+    <div class="row">
+      <div class="pill">Rodada: <span id="qnum">1</span>/<span id="qtotal">12</span></div>
+      <div class="pill">Pontos: <span id="score">0</span></div>
+      <div class="pill">Erros: <span id="errors">0</span>/5</div>
+      <div class="pill">Tempo: <span id="time">180</span>s</div>
+    </div>
+    <div class="progress"><span id="progressBar"></span></div>
+
+    <div class="map-wrap"><div id="map"></div></div>
+
+    <div class="question" id="question"></div>
+    <div class="options" id="options"></div>
+    <div class="feedback" id="feedback"></div>
+    <button class="next hidden" id="nextBtn">Próxima ▶</button>
+  </div>
+</div>
 
 <script>
-const BANK = [
-  ['Brasil','Brasília'],['Argentina','Buenos Aires'],['Chile','Santiago'],['Uruguai','Montevidéu'],['Paraguai','Assunção'],['Bolívia','Sucre'],['Peru','Lima'],['Equador','Quito'],['Colômbia','Bogotá'],['Venezuela','Caracas'],
-  ['México','Cidade do México'],['Estados Unidos','Washington, D.C.'],['Canadá','Ottawa'],['Cuba','Havana'],['Espanha','Madri'],['Portugal','Lisboa'],['França','Paris'],['Itália','Roma'],['Alemanha','Berlim'],['Reino Unido','Londres'],
-  ['Irlanda','Dublin'],['Países Baixos','Amsterdã'],['Bélgica','Bruxelas'],['Suíça','Berna'],['Áustria','Viena'],['Polônia','Varsóvia'],['Suécia','Estocolmo'],['Noruega','Oslo'],['Dinamarca','Copenhague'],['Finlândia','Helsinque'],
-  ['Grécia','Atenas'],['Turquia','Ancara'],['Rússia','Moscou'],['Ucrânia','Kiev'],['Japão','Tóquio'],['China','Pequim'],['Coreia do Sul','Seul'],['Índia','Nova Délhi'],['Austrália','Camberra'],['Nova Zelândia','Wellington'],
-  ['Egito','Cairo'],['África do Sul','Pretória'],['Nigéria','Abuja'],['Quênia','Nairóbi'],['Marrocos','Rabat'],['Arábia Saudita','Riade'],['Emirados Árabes Unidos','Abu Dhabi'],['Israel','Jerusalém'],['Tailândia','Bangcoc'],['Vietnã','Hanói']
+const COUNTRY_BANK = [
+  ['Brazil','Brasília'],['Argentina','Buenos Aires'],['Chile','Santiago'],['Uruguay','Montevideo'],['Paraguay','Asunción'],['Bolivia','Sucre'],['Peru','Lima'],['Colombia','Bogotá'],['Venezuela','Caracas'],['Ecuador','Quito'],
+  ['United States of America','Washington, D.C.'],['Canada','Ottawa'],['Mexico','Mexico City'],['Cuba','Havana'],
+  ['United Kingdom','London'],['France','Paris'],['Spain','Madrid'],['Portugal','Lisbon'],['Germany','Berlin'],['Italy','Rome'],['Netherlands','Amsterdam'],['Belgium','Brussels'],['Switzerland','Bern'],['Austria','Vienna'],['Poland','Warsaw'],['Sweden','Stockholm'],['Norway','Oslo'],['Finland','Helsinki'],['Greece','Athens'],
+  ['Russia','Moscow'],['Ukraine','Kyiv'],['Turkey','Ankara'],
+  ['China','Beijing'],['Japan','Tokyo'],['India','New Delhi'],['South Korea','Seoul'],['Thailand','Bangkok'],['Vietnam','Hanoi'],['Indonesia','Jakarta'],['Philippines','Manila'],
+  ['Australia','Canberra'],['New Zealand','Wellington'],
+  ['Egypt','Cairo'],['South Africa','Pretoria'],['Nigeria','Abuja'],['Kenya','Nairobi'],['Morocco','Rabat'],['Saudi Arabia','Riyadh'],['United Arab Emirates','Abu Dhabi'],['Israel','Jerusalem']
 ];
-const TOTAL=15;
-const shuffle=a=>[...a].sort(()=>Math.random()-0.5);
-const pick=(arr,n)=>shuffle(arr).slice(0,n);
 
-let questions=[],i=0,score=0,time=180,lock=false,timer;
-const $=id=>document.getElementById(id);
+const MAX_ERRORS = 5;
+const TOTAL_ROUNDS = 12;
+const GAME_TIME = 180;
+const shuffle = arr => [...arr].sort(()=>Math.random()-0.5);
+const norm = s => (s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
 
-function makeQuestion(){
-  const [country,capital]=BANK[Math.floor(Math.random()*BANK.length)];
-  const askCapital = Math.random() < 0.5;
-  if(askCapital){
-    const wrong = pick(BANK.filter(x=>x[1]!==capital).map(x=>x[1]),3);
-    const opts = shuffle([capital,...wrong]);
-    return {q:`Qual é a capital de ${country}?`,opts,ans:opts.indexOf(capital),exp:`${country} → ${capital}.`};
+let geojson=null, featuresByName=new Map(), queue=[], idx=0, score=0, errors=0, timeLeft=GAME_TIME, timer=null, lock=false;
+let current = null;
+
+const $ = id => document.getElementById(id);
+
+async function loadMap(){
+  const res = await fetch('https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world.geojson');
+  geojson = await res.json();
+  geojson.features.forEach(f=>featuresByName.set(f.properties.name, f));
+}
+
+function buildQueue(){
+  const available = COUNTRY_BANK
+    .map(([country, capital])=>({country, capital}))
+    .filter(c=>featuresByName.has(c.country));
+  queue = shuffle(available).slice(0, TOTAL_ROUNDS);
+}
+
+function renderMap(highlightCountry){
+  const box = $('map'); box.innerHTML='';
+  const width = box.clientWidth || 900, height = 520;
+  const projection = d3.geoMercator().fitSize([width,height], geojson);
+  const path = d3.geoPath(projection);
+
+  const svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
+  svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+
+  geojson.features.forEach(f=>{
+    const p = document.createElementNS('http://www.w3.org/2000/svg','path');
+    p.setAttribute('d', path(f));
+    p.setAttribute('class', 'country' + (f.properties.name===highlightCountry ? ' target' : ''));
+    p.setAttribute('aria-label', f.properties.name);
+    svg.appendChild(p);
+  });
+
+  box.appendChild(svg);
+}
+
+function makeRound(){
+  current = queue[idx];
+  const countryOpts = shuffle([current.country, ...shuffle(queue.filter(q=>q.country!==current.country)).slice(0,3).map(q=>q.country)]);
+  const capitalOpts = shuffle([current.capital, ...shuffle(COUNTRY_BANK.filter(([c,cap])=>cap!==current.capital)).slice(0,3).map(x=>x[1])]);
+  return { countryOpts, capitalOpts };
+}
+
+let roundData = null;
+
+function renderRound(){
+  roundData = makeRound();
+  lock = false;
+  $('qnum').textContent = idx+1;
+  $('qtotal').textContent = queue.length;
+  $('score').textContent = score;
+  $('errors').textContent = errors;
+  $('time').textContent = timeLeft;
+  $('progressBar').style.width = `${((idx)/queue.length)*100}%`;
+  $('feedback').textContent = '';
+  $('nextBtn').classList.add('hidden');
+
+  renderMap(current.country);
+
+  $('question').textContent = `País destacado no mapa: escolha o país correto e sua capital.`;
+  const options = $('options'); options.innerHTML='';
+
+  const title1 = document.createElement('div');
+  title1.className='muted'; title1.style.gridColumn='1/-1'; title1.textContent='1) Qual é o país destacado?';
+  options.appendChild(title1);
+  roundData.countryOpts.forEach((op,i)=>{
+    const b=document.createElement('button'); b.className='opt'; b.textContent=op; b.onclick=()=>pickCountry(i,b); options.appendChild(b);
+  });
+
+  const title2 = document.createElement('div');
+  title2.className='muted'; title2.style.gridColumn='1/-1'; title2.style.marginTop='4px'; title2.textContent='2) Qual é a capital desse país?';
+  options.appendChild(title2);
+  roundData.capitalOpts.forEach((op,i)=>{
+    const b=document.createElement('button'); b.className='opt'; b.textContent=op; b.onclick=()=>pickCapital(i,b); options.appendChild(b);
+  });
+
+  roundData.countryPicked = null;
+  roundData.capitalPicked = null;
+}
+
+function pickCountry(i,btn){
+  if(lock) return;
+  roundData.countryPicked = i;
+  [...$('options').querySelectorAll('button.opt')].forEach(b=>{ if(roundData.countryOpts.includes(b.textContent)) b.style.outline='none'; });
+  btn.style.outline='2px solid #86efac';
+  tryEvaluate();
+}
+
+function pickCapital(i,btn){
+  if(lock) return;
+  roundData.capitalPicked = i;
+  [...$('options').querySelectorAll('button.opt')].forEach(b=>{ if(roundData.capitalOpts.includes(b.textContent)) b.style.outline='none'; });
+  btn.style.outline='2px solid #86efac';
+  tryEvaluate();
+}
+
+function tryEvaluate(){
+  if(roundData.countryPicked==null || roundData.capitalPicked==null || lock) return;
+  lock = true;
+
+  const countryOk = roundData.countryOpts[roundData.countryPicked] === current.country;
+  const capitalOk = norm(roundData.capitalOpts[roundData.capitalPicked]) === norm(current.capital);
+
+  const allBtns = [...$('options').querySelectorAll('button.opt')];
+  allBtns.forEach(b=>{
+    const txt=b.textContent;
+    if(txt===current.country || norm(txt)===norm(current.capital)) b.classList.add('ok');
+  });
+
+  if(countryOk && capitalOk){
+    const pts = 25;
+    score += pts;
+    $('feedback').textContent = `✅ Boa! ${current.country} — ${current.capital}. +${pts} pontos`;
+  } else {
+    errors++;
+    const chosenCountry = roundData.countryOpts[roundData.countryPicked];
+    const chosenCapital = roundData.capitalOpts[roundData.capitalPicked];
+    allBtns.forEach(b=>{
+      if((b.textContent===chosenCountry && !countryOk) || (norm(b.textContent)===norm(chosenCapital) && !capitalOk)) b.classList.add('bad');
+    });
+    $('feedback').textContent = `❌ Correto: ${current.country} — ${current.capital}.`;
   }
-  const wrong = pick(BANK.filter(x=>x[0]!==country).map(x=>x[0]),3);
-  const opts = shuffle([country,...wrong]);
-  return {q:`${capital} é capital de qual país?`,opts,ans:opts.indexOf(country),exp:`${capital} é a capital de ${country}.`};
-}
 
-function setup(){
-  questions=[];
-  while(questions.length<TOTAL) questions.push(makeQuestion());
-  i=0;score=0;time=180;lock=false;
-  $('score').textContent='0';$('time').textContent='180';
-  clearInterval(timer);
-  timer=setInterval(()=>{ time--; $('time').textContent=Math.max(0,time); if(time<=0) finish(); },1000);
-  render();
-}
-
-function render(){
-  const cur=questions[i];
-  $('qnum').textContent=i+1; $('qtotal').textContent=questions.length;
-  $('question').textContent=cur.q; $('feedback').textContent=''; $('nextBtn').classList.add('hidden');
-  const box=$('options'); box.innerHTML=''; lock=false;
-  cur.opts.forEach((opt,idx)=>{ const b=document.createElement('button'); b.className='opt'; b.textContent=opt; b.onclick=()=>answer(idx); box.appendChild(b); });
-}
-
-function answer(idx){
-  if(lock) return; lock=true;
-  const cur=questions[i], btns=$('options').children;
-  if(idx===cur.ans){ btns[idx].classList.add('ok'); score+=10; $('score').textContent=score; $('feedback').textContent='✅ '+cur.exp; }
-  else { btns[idx].classList.add('bad'); btns[cur.ans].classList.add('ok'); $('feedback').textContent='❌ '+cur.exp; }
+  $('score').textContent = score;
+  $('errors').textContent = errors;
   $('nextBtn').classList.remove('hidden');
-  if(i===questions.length-1) $('nextBtn').textContent='Finalizar 🏁';
+  if(errors>=MAX_ERRORS) $('nextBtn').textContent = 'Ver resultado 🏁';
+  else if(idx===queue.length-1) $('nextBtn').textContent = 'Finalizar 🏁';
 }
 
-function next(){ if(i<questions.length-1){ i++; render(); } else finish(); }
+function nextRound(){
+  if(errors>=MAX_ERRORS || idx>=queue.length-1){ finish(); return; }
+  idx++; renderRound();
+}
 
 function finish(){
   clearInterval(timer);
-  const final=score+Math.max(0,time);
-  $('gameCard').innerHTML=`<div class='result'><h1>🏆 Missão concluída</h1><p class='muted' style='margin-top:8px'>GeoMestre Mundo finalizado!</p><div class='score'>${final} pontos</div><p class='muted' style='margin-top:8px'>Base: ${score} • bônus tempo: ${Math.max(0,time)}</p><button class='next' style='margin-top:14px' onclick='location.reload()'>Jogar novamente</button></div>`;
+  const final = score + Math.max(0,timeLeft);
+  $('gameCard').innerHTML = `<div class='center'><h1>🏆 Fim de jogo</h1><p class='muted' style='margin-top:8px'>GeoMestre Mundo (estilo GeoMestre Brasil)</p><div style='font-size:2.3rem;font-weight:800;color:#86efac;margin-top:10px'>${final} pontos</div><p class='muted' style='margin-top:8px'>Base: ${score} • bônus tempo: ${Math.max(0,timeLeft)} • erros: ${errors}/${MAX_ERRORS}</p><button class='next' style='margin-top:14px' onclick='location.reload()'>Jogar novamente</button></div>`;
   window.parent.postMessage({type:'game-score',game:'geomaster-mundo',score:final},'*');
 }
 
-$('nextBtn').onclick=next;
-setup();
+function startTimer(){
+  clearInterval(timer);
+  timer = setInterval(()=>{
+    timeLeft = Math.max(0,timeLeft-1);
+    $('time').textContent = timeLeft;
+    if(timeLeft<=0) finish();
+  },1000);
+}
+
+async function init(){
+  try{
+    await loadMap();
+    buildQueue();
+    if(queue.length<8){
+      $('gameCard').innerHTML = `<h1>⚠️ Não foi possível carregar países suficientes</h1><p class='muted' style='margin-top:8px'>Tenta recarregar a página.</p>`;
+      return;
+    }
+    idx=0;score=0;errors=0;timeLeft=GAME_TIME;
+    renderRound();
+    startTimer();
+    $('nextBtn').onclick = nextRound;
+  }catch(e){
+    $('gameCard').innerHTML = `<h1>⚠️ Erro ao carregar mapa-múndi</h1><p class='muted' style='margin-top:8px'>Verifique conexão e recarregue.</p>`;
+    console.error(e);
+  }
+}
+
+init();
 </script>
 </body>
 </html>
