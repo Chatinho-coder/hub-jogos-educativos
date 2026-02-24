@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🔍 Detetive da Ortografia</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
+    body { font-family: 'Poppins', sans-serif; }
+    
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-10px); }
+      75% { transform: translateX(10px); }
+    }
+    
+    @keyframes pulse-glow {
+      0%, 100% { box-shadow: 0 0 20px rgba(234, 179, 8, 0.5); }
+      50% { box-shadow: 0 0 40px rgba(234, 179, 8, 0.8); }
+    }
+    
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-10px); }
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.8); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    
+    .shake { animation: shake 0.4s; }
+    .pulse-glow { animation: pulse-glow 0.6s; }
+    .float { animation: float 2s ease-in-out infinite; }
+    .fade-in { animation: fadeIn 0.3s ease-out; }
+  </style>
+</head>
+<body class="bg-gradient-to-br from-slate-800 via-slate-700 to-slate-900 min-h-screen flex items-center justify-center p-4">
+  
+  <!-- Tela Inicial -->
+  <div id="startScreen" class="bg-slate-800 rounded-2xl shadow-2xl p-8 max-w-md w-full text-center border-4 border-yellow-500">
+    <div class="text-7xl mb-4 float">🔍</div>
+    <h1 class="text-4xl font-bold text-yellow-400 mb-2">Detetive da Ortografia</h1>
+    <p class="text-slate-300 mb-6">Resolva o caso encontrando a grafia correta!</p>
+    
+    <div class="bg-slate-700 rounded-lg p-4 mb-6 text-left">
+      <p class="text-yellow-400 font-semibold mb-2">📋 Como Jogar:</p>
+      <ul class="text-slate-300 text-sm space-y-1">
+        <li>• Leia a frase com atenção</li>
+        <li>• Escolha a palavra escrita corretamente</li>
+        <li>• Colete 10 pistas para resolver o caso!</li>
+      </ul>
+    </div>
+    
+    <button onclick="startGame()" class="bg-yellow-500 hover:bg-yellow-600 text-slate-900 font-bold py-4 px-8 rounded-xl text-xl transition-all transform hover:scale-105">
+      Iniciar Investigação 🕵️
+    </button>
+  </div>
+
+  <!-- Tela do Jogo -->
+  <div id="gameScreen" class="hidden bg-slate-800 rounded-2xl shadow-2xl p-6 max-w-2xl w-full border-4 border-yellow-500">
+    <!-- Header -->
+    <div class="mb-6">
+      <div class="flex justify-between items-center mb-3">
+        <div class="flex items-center gap-2">
+          <span class="text-3xl">🔍</span>
+          <div>
+            <div class="text-yellow-400 font-bold text-lg">Caso em Andamento</div>
+            <div class="text-slate-400 text-sm">Pistas: <span id="clueCount" class="text-yellow-300 font-semibold">0/10</span></div>
+          </div>
+        </div>
+        <div class="flex items-center gap-3">
+          <div id="comboDisplay" class="text-2xl font-bold text-green-400"></div>
+          <button onclick="exitGame()" class="text-slate-400 hover:text-yellow-400 transition-colors text-sm font-semibold">
+            ❌ Sair
+          </button>
+        </div>
+      </div>
+      <!-- Barra de progresso -->
+      <div class="bg-slate-600 rounded-full h-3 overflow-hidden">
+        <div id="progressBar" class="bg-gradient-to-r from-yellow-500 to-yellow-300 h-full transition-all duration-500" style="width: 0%"></div>
+      </div>
+    </div>
+
+    <!-- Frase do Contexto -->
+    <div id="sentenceCard" class="bg-gradient-to-r from-slate-700 to-slate-600 rounded-xl p-6 mb-6 border-2 border-slate-500">
+      <p class="text-slate-400 text-sm mb-2">📝 Contexto da investigação:</p>
+      <p id="sentenceText" class="text-white text-lg leading-relaxed"></p>
+    </div>
+
+    <!-- Pergunta -->
+    <div class="bg-slate-700 rounded-xl p-6 mb-4">
+      <p class="text-yellow-400 font-semibold mb-4">🤔 Qual é a grafia correta?</p>
+      <div id="optionsContainer" class="space-y-3"></div>
+    </div>
+
+    <!-- Feedback -->
+    <div id="feedback" class="text-center font-semibold text-lg min-h-8"></div>
+  </div>
+
+  <!-- Tela Final -->
+  <div id="endScreen" class="hidden bg-slate-800 rounded-2xl shadow-2xl p-8 max-w-md w-full text-center border-4 border-yellow-500">
+    <div class="text-7xl mb-4">🎉</div>
+    <h2 class="text-4xl font-bold text-yellow-400 mb-2">Caso Resolvido!</h2>
+    <p class="text-slate-300 mb-6" id="endMessage">Parabéns, detetive!</p>
+    
+    <div class="bg-slate-700 rounded-lg p-6 mb-6">
+      <div class="grid grid-cols-2 gap-4 text-center">
+        <div>
+          <div class="text-3xl font-bold text-green-400" id="correctCount">-</div>
+          <div class="text-slate-400 text-sm">Acertos</div>
+        </div>
+        <div>
+          <div class="text-3xl font-bold text-red-400" id="wrongCount">-</div>
+          <div class="text-slate-400 text-sm">Erros</div>
+        </div>
+      </div>
+      <div class="mt-4 pt-4 border-t border-slate-600">
+        <div class="text-4xl font-bold text-yellow-400" id="accuracyPercent">-</div>
+        <div class="text-slate-400 text-sm">Precisão</div>
+      </div>
+    </div>
+    
+    <button onclick="startGame()" class="bg-yellow-500 hover:bg-yellow-600 text-slate-900 font-bold py-4 px-8 rounded-xl text-xl transition-all transform hover:scale-105">
+      Nova Investigação 🔍
+    </button>
+  </div>
+
+  <script>
+    // Base de perguntas (ortografia comum em português)
+    const questions = [
+      { sentence: "Ele tomou o café da manhã com muita ____.", word: "pressa", options: ["pressa", "preça"], rule: "SS/Ç" },
+      { sentence: "A professora ____ a lição no quadro.", word: "explicou", options: ["esplicou", "explicou"], rule: "X/S" },
+      { sentence: "O ____ estava lotado de passageiros.", word: "ônibus", options: ["ônibus", "onibus"], rule: "Acentuação" },
+      { sentence: "Preciso ____ minha lição de casa.", word: "fazer", options: ["fazer", "faser"], rule: "Z/S" },
+      { sentence: "O ____ da floresta é muito importante.", word: "ecossistema", options: ["ecosistema", "ecossistema"], rule: "SS/S" },
+      { sentence: "Ela ____ na competição de natação.", word: "excelente", options: ["ecelente", "excelente"], rule: "X/EC" },
+      { sentence: "Vou ____ um presente para meu amigo.", word: "escolher", options: ["escolher", "escoier"], rule: "LH/I" },
+      { sentence: "O ____ está muito quente hoje.", word: "chá", options: ["chá", "xá"], rule: "CH/X" },
+      { sentence: "A ____ do problema foi encontrada.", word: "solução", options: ["solução", "soluçao"], rule: "Acentuação" },
+      { sentence: "Ele fez uma ____ na parede.", word: "exceção", options: ["exceção", "excessão"], rule: "Ç/SS" },
+      { sentence: "O ____ do time foi decisivo.", word: "desempenho", options: ["desempenho", "desempeno"], rule: "NH/N" },
+      { sentence: "Preciso ____ minhas responsabilidades.", word: "assumir", options: ["asumir", "assumir"], rule: "SS/S" },
+      { sentence: "A música tem um ____ agradável.", word: "ritmo", options: ["ritimo", "ritmo"], rule: "TM/TIM" },
+      { sentence: "Ela mora ____ da praça.", word: "próximo", options: ["próximo", "proximo"], rule: "Acentuação" },
+      { sentence: "O ____ foi delicioso.", word: "jantar", options: ["jantar", "gianta"], rule: "J/G" },
+      { sentence: "Vou ____ um livro na biblioteca.", word: "pegar", options: ["pegar", "pejar"], rule: "G/J" },
+      { sentence: "A ____ está muito alta.", word: "temperatura", options: ["tenperatura", "temperatura"], rule: "M/N" },
+      { sentence: "Ele tem ____ de aprender.", word: "vontade", options: ["vontade", "vontadi"], rule: "DE/DI" },
+      { sentence: "O ____ do rio é cristalino.", word: "açude", options: ["açude", "asude"], rule: "Ç/S" },
+      { sentence: "Preciso ____ para o teste.", word: "estudar", options: ["estudar", "studar"], rule: "E/Omissão" },
+      { sentence: "A ____ é fundamental na amizade.", word: "confiança", options: ["confiansa", "confiança"], rule: "Ç/S" },
+      { sentence: "O cachorro ____ muito alto.", word: "latiu", options: ["latiu", "latio"], rule: "U/O" },
+      { sentence: "Ela ____ uma história incrível.", word: "contou", options: ["conto", "contou"], rule: "U/O" },
+      { sentence: "O ____ do filme foi emocionante.", word: "final", options: ["final", "finar"], rule: "L/R" }
+    ];
+
+    let currentQuestions = [];
+    let currentQuestionIndex = 0;
+    let score = 0;
+    let combo = 0;
+    let correctAnswers = 0;
+    let wrongAnswers = 0;
+    const TOTAL_QUESTIONS = 10;
+
+    function shuffleArray(array) {
+      const arr = [...array];
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+
+    function startGame() {
+      // Reset
+      score = 0;
+      combo = 0;
+      correctAnswers = 0;
+      wrongAnswers = 0;
+      currentQuestionIndex = 0;
+      
+      // Selecionar 10 perguntas aleatórias
+      currentQuestions = shuffleArray(questions).slice(0, TOTAL_QUESTIONS);
+      
+      // Mostrar tela do jogo
+      document.getElementById('startScreen').classList.add('hidden');
+      document.getElementById('endScreen').classList.add('hidden');
+      document.getElementById('gameScreen').classList.remove('hidden');
+      
+      loadQuestion();
+    }
+
+    function loadQuestion() {
+      if (currentQuestionIndex >= TOTAL_QUESTIONS) {
+        endGame();
+        return;
+      }
+
+      const q = currentQuestions[currentQuestionIndex];
+      const sentenceCard = document.getElementById('sentenceCard');
+      const sentenceText = document.getElementById('sentenceText');
+      const optionsContainer = document.getElementById('optionsContainer');
+      const feedback = document.getElementById('feedback');
+      const clueCount = document.getElementById('clueCount');
+
+      // Limpar feedback
+      feedback.textContent = '';
+      feedback.className = 'text-center font-semibold text-lg min-h-8';
+      sentenceCard.className = 'bg-gradient-to-r from-slate-700 to-slate-600 rounded-xl p-6 mb-6 border-2 border-slate-500';
+
+      // Atualizar contador de pistas
+      clueCount.textContent = `${currentQuestionIndex}/${TOTAL_QUESTIONS}`;
+      
+      // Atualizar barra de progresso
+      const progressBar = document.getElementById('progressBar');
+      const progress = (currentQuestionIndex / TOTAL_QUESTIONS) * 100;
+      progressBar.style.width = `${progress}%`;
+
+      // Mostrar frase
+      const sentenceWithBlank = q.sentence.replace('____', '<span class="text-yellow-400 font-bold">____</span>');
+      sentenceText.innerHTML = sentenceWithBlank;
+
+      // Embaralhar opções
+      const shuffledOptions = shuffleArray(q.options);
+
+      // Criar botões de opção
+      optionsContainer.innerHTML = '';
+      shuffledOptions.forEach(option => {
+        const btn = document.createElement('button');
+        btn.textContent = option;
+        btn.className = 'w-full bg-slate-600 hover:bg-slate-500 text-white font-semibold py-4 px-6 rounded-lg transition-all text-xl';
+        btn.onclick = () => checkAnswer(option, q.word, btn);
+        optionsContainer.appendChild(btn);
+      });
+
+      // Atualizar combo display
+      updateComboDisplay();
+    }
+
+    function checkAnswer(selected, correct, btnElement) {
+      const feedback = document.getElementById('feedback');
+      const sentenceCard = document.getElementById('sentenceCard');
+      const allButtons = document.querySelectorAll('#optionsContainer button');
+      const q = currentQuestions[currentQuestionIndex];
+
+      // Desabilitar todos os botões
+      allButtons.forEach(btn => btn.disabled = true);
+
+      if (selected === correct) {
+        // Resposta correta
+        correctAnswers++;
+        combo++;
+        btnElement.className = 'w-full bg-green-500 text-white font-semibold py-4 px-6 rounded-lg text-xl pulse-glow';
+        feedback.textContent = getCorrectFeedback();
+        feedback.className = 'text-center font-semibold text-lg text-green-400';
+        sentenceCard.className = 'bg-gradient-to-r from-green-900 to-green-800 rounded-xl p-6 mb-6 border-2 border-green-500';
+      } else {
+        // Resposta errada
+        wrongAnswers++;
+        combo = 0;
+        btnElement.className = 'w-full bg-red-500 text-white font-semibold py-4 px-6 rounded-lg text-xl shake';
+        
+        // Destacar resposta correta
+        allButtons.forEach(btn => {
+          if (btn.textContent === correct) {
+            btn.className = 'w-full bg-green-500 text-white font-semibold py-4 px-6 rounded-lg text-xl pulse-glow';
+          }
+        });
+        
+        feedback.innerHTML = `${getWrongFeedback()}<br><span class="text-yellow-300 text-sm">📚 Regra: ${q.rule}</span>`;
+        feedback.className = 'text-center font-semibold text-lg text-red-400';
+        sentenceCard.className = 'bg-gradient-to-r from-red-900 to-red-800 rounded-xl p-6 mb-6 border-2 border-red-500 shake';
+      }
+
+      updateComboDisplay();
+
+      // Próxima pergunta após delay
+      setTimeout(() => {
+        currentQuestionIndex++;
+        loadQuestion();
+      }, 1500);
+    }
+
+    function updateComboDisplay() {
+      const comboDisplay = document.getElementById('comboDisplay');
+      if (combo >= 2) {
+        const emoji = combo >= 5 ? '🔥🔥' : combo >= 3 ? '🔥' : '✨';
+        comboDisplay.textContent = `${emoji} ${combo}x Combo!`;
+        comboDisplay.className = combo >= 5 ? 'text-2xl font-bold text-orange-400 fade-in' : 'text-2xl font-bold text-green-400 fade-in';
+      } else {
+        comboDisplay.textContent = '';
+        comboDisplay.className = '';
+      }
+    }
+
+    function exitGame() {
+      if (confirm('🚪 Deseja sair da investigação atual? O progresso será perdido.')) {
+        document.getElementById('gameScreen').classList.add('hidden');
+        document.getElementById('startScreen').classList.remove('hidden');
+      }
+    }
+
+    function getCorrectFeedback() {
+      const messages = [
+        "🎯 Excelente dedução, detetive!",
+        "✨ Perfeito! Pista coletada!",
+        "🔍 Muito bem! Continue assim!",
+        "⭐ Correto! Você está no caminho certo!",
+        "🏆 Brilhante! Mais uma pista!"
+      ];
+      return messages[Math.floor(Math.random() * messages.length)];
+    }
+
+    function getWrongFeedback() {
+      const messages = [
+        "❌ Quase lá! Continue investigando...",
+        "🔎 Ops! Atenção aos detalhes!",
+        "💭 Não desista, detetive!",
+        "📝 Revise e tente novamente!",
+        "🤔 Hmm, essa foi difícil!"
+      ];
+      return messages[Math.floor(Math.random() * messages.length)];
+    }
+
+    function endGame() {
+      const accuracy = Math.round((correctAnswers / TOTAL_QUESTIONS) * 100);
+      
+      document.getElementById('gameScreen').classList.add('hidden');
+      document.getElementById('endScreen').classList.remove('hidden');
+      
+      document.getElementById('correctCount').textContent = correctAnswers;
+      document.getElementById('wrongCount').textContent = wrongAnswers;
+      document.getElementById('accuracyPercent').textContent = accuracy + '%';
+      
+      let message = '';
+      if (accuracy === 100) {
+        message = '🌟 Detetive perfeito! Caso resolvido com maestria!';
+      } else if (accuracy >= 80) {
+        message = '🎖️ Excelente trabalho, detetive! Quase perfeito!';
+      } else if (accuracy >= 60) {
+        message = '👏 Bom trabalho! Continue praticando!';
+      } else {
+        message = '💪 Continue treinando, detetive! Você vai melhorar!';
+      }
+      
+      document.getElementById('endMessage').textContent = message;
+      
+      // Send score to parent hub (score = correctAnswers * 10)
+      if (window.parent !== window) {
+        window.parent.postMessage({ type: 'game-score', game: 'ortografia', score: correctAnswers * 10 }, '*');
+      }
+    }
+  </script>
+</body>
+</html>
