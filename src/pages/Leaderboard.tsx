@@ -9,7 +9,8 @@ const gameInfo: { [key: string]: { name: string; emoji: string; color: string } 
   tabuada: { name: 'Tabuada Rush', emoji: '🏎️', color: '#8B5CF6' },
   geografia: { name: 'GeoMestre Brasil', emoji: '🗺️', color: '#10B981' },
   fracoes: { name: 'Pizzaria das Frações', emoji: '🍕', color: '#F97316' },
-  ortografia: { name: 'Detetive da Ortografia', emoji: '🔍', color: '#F59E0B' }
+  ortografia: { name: 'Detetive da Ortografia', emoji: '🔍', color: '#F59E0B' },
+  circuito: { name: 'Circuito Lógico', emoji: '⚡', color: '#3B82F6' }
 }
 
 export default function Leaderboard() {

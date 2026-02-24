@@ -31,6 +31,7 @@
   .switch-label{font-size:.8rem;color:var(--muted);font-weight:600}
   .switch-btn{width:64px;height:64px;border-radius:16px;border:3px solid var(--off);background:var(--card);font-size:1.8rem;font-weight:bold;cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;color:var(--off);user-select:none;-webkit-tap-highlight-color:transparent}
   .switch-btn.on{border-color:var(--on);color:var(--on);background:#14532d22;box-shadow:0 0 20px #22c55e44}
+  .switch-btn.indeterminate{border-color:#94a3b8;color:#94a3b8;background:#0f172a66}
   .switch-btn:active{transform:scale(.92)}
 
   /* Output */
@@ -293,7 +294,7 @@ function loadLevel() {
   const lvl = LEVELS[currentLevel];
   attempts = 0;
   inputs = {};
-  lvl.inputs.forEach(i => inputs[i] = (lvl.initial && lvl.initial[i]) ? 1 : 0);
+  lvl.inputs.forEach(i => inputs[i] = null);
 
   document.getElementById('levelNum').textContent = currentLevel + 1;
   const targetHint = lvl.target === 0
@@ -320,8 +321,8 @@ function loadLevel() {
     g.className = 'switch-group';
     g.innerHTML = `<span class="switch-label">${name}</span>`;
     const btn = document.createElement('button');
-    btn.className = 'switch-btn' + (inputs[name] ? ' on' : '');
-    btn.textContent = inputs[name] ? '1' : '0';
+    btn.className = 'switch-btn indeterminate';
+    btn.textContent = '-';
     btn.onclick = () => toggleInput(name, btn);
     g.appendChild(btn);
     sr.appendChild(g);
@@ -332,9 +333,13 @@ function loadLevel() {
 }
 
 function toggleInput(name, btn) {
-  inputs[name] = inputs[name] ? 0 : 1;
-  btn.textContent = inputs[name] ? '1' : '0';
+  if (inputs[name] === null) inputs[name] = 0;
+  else inputs[name] = inputs[name] === 0 ? 1 : 0;
+
+  btn.textContent = inputs[name] === null ? '-' : String(inputs[name]);
+  btn.classList.toggle('indeterminate', inputs[name] === null);
   btn.classList.toggle('on', inputs[name] === 1);
+
   evaluate();
   drawCircuit();
 }
@@ -342,15 +347,21 @@ function toggleInput(name, btn) {
 // ========== EVALUATE ==========
 function evaluate() {
   const lvl = LEVELS[currentLevel];
-  const vals = {...inputs};
+  const vals = { ...inputs };
 
   for (const g of lvl.gates) {
     const a = vals[g.in[0]];
-    const b = g.in.length > 1 ? vals[g.in[1]] : 0;
+    const b = g.in.length > 1 ? vals[g.in[1]] : undefined;
+
+    if (a == null || (g.in.length > 1 && b == null)) {
+      vals[g.out] = null;
+      continue;
+    }
+
     switch(g.type) {
-      case 'NOT': vals[g.out] = a ? 0 : 1; break;
-      case 'AND': vals[g.out] = (a && b) ? 1 : 0; break;
-      case 'OR':  vals[g.out] = (a || b) ? 1 : 0; break;
+      case 'NOT': vals[g.out] = a === 1 ? 0 : 1; break;
+      case 'AND': vals[g.out] = (a === 1 && b === 1) ? 1 : 0; break;
+      case 'OR':  vals[g.out] = (a === 1 || b === 1) ? 1 : 0; break;
       case 'XOR': vals[g.out] = (a !== b) ? 1 : 0; break;
     }
   }
@@ -359,11 +370,18 @@ function evaluate() {
   const bulb = document.getElementById('bulb');
   const label = document.getElementById('outputLabel');
 
-  bulb.textContent = result ? '💡' : '🔌';
+  if (result == null) {
+    bulb.textContent = '❔';
+    bulb.classList.remove('lit');
+    label.textContent = 'Saída: -';
+    label.className = 'output-label off';
+    return;
+  }
+
+  bulb.textContent = result === 1 ? '💡' : '🔌';
   bulb.classList.toggle('lit', result === 1);
-  const matched = result === lvl.target;
   label.textContent = `Saída: ${result}`;
-  label.className = 'output-label ' + (result ? 'on' : 'off');
+  label.className = 'output-label ' + (result === 1 ? 'on' : 'off');
 
   // Check win
   attempts++;
@@ -420,14 +438,18 @@ function drawCircuit() {
   const gateVals = [];
   for (const g of lvl.gates) {
     const a = vals[g.in[0]];
-    const b = g.in.length > 1 ? vals[g.in[1]] : 0;
-    let r;
-    switch(g.type) {
-      case 'NOT': r = a ? 0 : 1; break;
-      case 'AND': r = (a && b) ? 1 : 0; break;
-      case 'OR':  r = (a || b) ? 1 : 0; break;
-      case 'XOR': r = (a !== b) ? 1 : 0; break;
+    const b = g.in.length > 1 ? vals[g.in[1]] : undefined;
+    let r = null;
+
+    if (a != null && (g.in.length === 1 || b != null)) {
+      switch(g.type) {
+        case 'NOT': r = a === 1 ? 0 : 1; break;
+        case 'AND': r = (a === 1 && b === 1) ? 1 : 0; break;
+        case 'OR':  r = (a === 1 || b === 1) ? 1 : 0; break;
+        case 'XOR': r = (a !== b) ? 1 : 0; break;
+      }
     }
+
     vals[g.out] = r;
     gateVals.push(r);
   }
@@ -507,12 +529,15 @@ function drawCircuit() {
   // Draw input nodes
   lvl.inputs.forEach(name => {
     const p = inputPositions[name];
-    const active = inputs[name];
+    const val = inputs[name];
+    const isOn = val === 1;
+    const isUndefined = val == null;
+
     ctx.beginPath();
     ctx.arc(p.x, p.y, 18, 0, Math.PI * 2);
-    ctx.fillStyle = active ? '#22c55e' : '#475569';
+    ctx.fillStyle = isUndefined ? '#1f2937' : (isOn ? '#22c55e' : '#475569');
     ctx.fill();
-    ctx.strokeStyle = active ? '#4ade80' : '#64748b';
+    ctx.strokeStyle = isUndefined ? '#94a3b8' : (isOn ? '#4ade80' : '#64748b');
     ctx.lineWidth = 3;
     ctx.stroke();
 
@@ -520,7 +545,7 @@ function drawCircuit() {
     ctx.font = 'bold 20px sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText(active ? '1' : '0', p.x, p.y);
+    ctx.fillText(isUndefined ? '-' : String(val), p.x, p.y);
 
     // Label
     ctx.fillStyle = '#94a3b8';
@@ -554,23 +579,25 @@ function drawCircuit() {
   ctx.beginPath();
   ctx.arc(outputPos.x, outputPos.y, 24, 0, Math.PI * 2);
   const outVal = vals[lvl.output];
-  ctx.fillStyle = outVal ? '#fbbf24' : '#475569';
+  const outUndefined = outVal == null;
+
+  ctx.fillStyle = outUndefined ? '#1f2937' : (outVal === 1 ? '#fbbf24' : '#475569');
   ctx.fill();
-  if (outVal) {
+  if (outVal === 1) {
     ctx.shadowColor = '#fbbf24';
     ctx.shadowBlur = 20;
     ctx.fill();
     ctx.shadowBlur = 0;
   }
-  ctx.strokeStyle = outVal ? '#f59e0b' : '#64748b';
+  ctx.strokeStyle = outUndefined ? '#94a3b8' : (outVal === 1 ? '#f59e0b' : '#64748b');
   ctx.lineWidth = 3;
   ctx.stroke();
 
-  ctx.fillStyle = outVal ? '#000' : '#fff';
+  ctx.fillStyle = outVal === 1 ? '#000' : '#fff';
   ctx.font = '20px sans-serif';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillText(outVal ? '1' : '0', outputPos.x, outputPos.y);
+  ctx.fillText(outUndefined ? '-' : String(outVal), outputPos.x, outputPos.y);
 }
 
 // Resize handler
