@@ -31,7 +31,8 @@ alter table public.groups enable row level security;
 alter table public.group_members enable row level security;
 alter table public.group_invites enable row level security;
 
-create policy if not exists groups_select_member on public.groups
+drop policy if exists groups_select_member on public.groups;
+create policy groups_select_member on public.groups
 for select using (
   exists (
     select 1 from public.group_members gm
@@ -39,10 +40,12 @@ for select using (
   )
 );
 
-create policy if not exists groups_insert_owner on public.groups
+drop policy if exists groups_insert_owner on public.groups;
+create policy groups_insert_owner on public.groups
 for insert with check (owner_id = auth.uid());
 
-create policy if not exists group_members_select_member on public.group_members
+drop policy if exists group_members_select_member on public.group_members;
+create policy group_members_select_member on public.group_members
 for select using (
   exists (
     select 1 from public.group_members gm
@@ -50,7 +53,8 @@ for select using (
   )
 );
 
-create policy if not exists group_members_insert_admin on public.group_members
+drop policy if exists group_members_insert_admin on public.group_members;
+create policy group_members_insert_admin on public.group_members
 for insert with check (
   exists (
     select 1 from public.group_members gm
@@ -60,7 +64,8 @@ for insert with check (
   )
 );
 
-create policy if not exists group_members_update_owner on public.group_members
+drop policy if exists group_members_update_owner on public.group_members;
+create policy group_members_update_owner on public.group_members
 for update using (
   exists (
     select 1 from public.group_members gm
@@ -70,7 +75,8 @@ for update using (
   )
 );
 
-create policy if not exists group_invites_select_admin on public.group_invites
+drop policy if exists group_invites_select_admin on public.group_invites;
+create policy group_invites_select_admin on public.group_invites
 for select using (
   exists (
     select 1 from public.group_members gm
@@ -80,7 +86,8 @@ for select using (
   )
 );
 
-create policy if not exists group_invites_insert_admin on public.group_invites
+drop policy if exists group_invites_insert_admin on public.group_invites;
+create policy group_invites_insert_admin on public.group_invites
 for insert with check (
   exists (
     select 1 from public.group_members gm
