@@ -128,8 +128,23 @@ export default function Hub() {
 
   const resendInvite = async (invite: GroupInvite) => {
     setGroupMsg('')
-    await sendMagicLink(invite.email, `/auth?invite=${invite.token}`)
-    setGroupMsg(`Magic link reenviado para ${invite.email}`)
+    try {
+      const newToken = crypto.randomUUID()
+      const { error } = await supabase
+        .from('group_invites')
+        .update({ token: newToken })
+        .eq('id', invite.id)
+      if (error) {
+        setGroupMsg(`Erro ao atualizar convite: ${error.message}`)
+        return
+      }
+
+      await sendMagicLink(invite.email, `/auth?invite=${newToken}`)
+      setGroupMsg(`Magic link reenviado para ${invite.email}`)
+      await refreshGroups()
+    } catch (err: any) {
+      setGroupMsg(`Erro ao reenviar link: ${err?.message || 'falha desconhecida'}`)
+    }
   }
 
   const promoteToAdmin = async (memberUserId: string) => {
