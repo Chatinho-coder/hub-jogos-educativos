@@ -142,3 +142,37 @@ end;
 $$;
 
 grant execute on function public.accept_group_invite(text) to anon, authenticated;
+
+create or replace function public.create_group_with_owner(group_name text)
+returns uuid
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  new_group_id uuid;
+  v_email text;
+begin
+  if auth.uid() is null then
+    raise exception 'not_authenticated';
+  end if;
+
+  if coalesce(trim(group_name), '') = '' then
+    raise exception 'group_name_required';
+  end if;
+
+  select email into v_email from auth.users where id = auth.uid();
+
+  insert into public.groups(name, owner_id)
+  values (trim(group_name), auth.uid())
+  returning id into new_group_id;
+
+  insert into public.group_members(group_id, user_id, user_email, role)
+  values (new_group_id, auth.uid(), coalesce(v_email, ''), 'owner')
+  on conflict (group_id, user_id) do nothing;
+
+  return new_group_id;
+end;
+$$;
+
+grant execute on function public.create_group_with_owner(text) to authenticated;

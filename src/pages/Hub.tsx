@@ -72,10 +72,8 @@ export default function Hub() {
   const createGroup = async () => {
     if (!user || !newGroupName.trim()) return
     setGroupMsg('')
-    const { data, error } = await supabase.from('groups').insert({ name: newGroupName.trim(), owner_id: user.id }).select('id,name').single()
+    const { data, error } = await supabase.rpc('create_group_with_owner', { group_name: newGroupName.trim() })
     if (error || !data) { setGroupMsg(`Erro ao criar grupo: ${error?.message || 'falha desconhecida'}`); return }
-    const { error: memberErr } = await supabase.from('group_members').insert({ group_id: data.id, user_id: user.id, user_email: user.email!, role: 'owner' })
-    if (memberErr) { setGroupMsg(`Grupo criado, mas falhou ao adicionar owner: ${memberErr.message}`); return }
     setNewGroupName('')
     setGroupMsg('Grupo criado!')
     await refreshGroups()
