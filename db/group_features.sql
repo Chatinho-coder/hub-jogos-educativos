@@ -100,7 +100,7 @@ for update using (
 
 drop policy if exists group_invites_select_admin on public.group_invites;
 create policy group_invites_select_admin on public.group_invites
-for select using (public.is_group_admin_or_owner(group_invites.group_id, auth.uid()));
+for select using (public.is_group_member(group_invites.group_id, auth.uid()));
 
 drop policy if exists group_invites_insert_admin on public.group_invites;
 create policy group_invites_insert_admin on public.group_invites

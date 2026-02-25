@@ -6,6 +6,7 @@ import { supabase } from '../lib/supabase'
 type GroupRole = 'owner' | 'admin' | 'member'
 interface GroupRow { id: string; name: string }
 interface GroupMember { group_id: string; user_id: string; user_email: string; role: GroupRole }
+interface GroupInvite { id: string; group_id: string; email: string; token: string; accepted_at: string | null }
 
 const games = [
   { id: 'tabuada', title: 'Tabuada Rush', emoji: '🏎️', subtitle: 'Velocidade & Cálculo', description: 'Responda multiplicações contra o relógio.', color: '#8B5CF6', colorLight: '#C4B5FD', bg: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', tag: 'Matemática' },
@@ -30,7 +31,9 @@ export default function Hub() {
   const [totalGames, setTotalGames] = useState(0)
   const [subjectFilter, setSubjectFilter] = useState('Todos')
   const [groups, setGroups] = useState<GroupRow[]>([])
-  const [members, setMembers] = useState<GroupMember[]>([])
+  const [myMemberships, setMyMemberships] = useState<GroupMember[]>([])
+  const [groupMembers, setGroupMembers] = useState<GroupMember[]>([])
+  const [groupInvites, setGroupInvites] = useState<GroupInvite[]>([])
   const [activeGroupId, setActiveGroupId] = useState<string>(localStorage.getItem('activeGroupId') || '')
   const [newGroupName, setNewGroupName] = useState('')
   const [inviteEmail, setInviteEmail] = useState('')
@@ -40,7 +43,7 @@ export default function Hub() {
 
   const subjects = useMemo(() => ['Todos', ...Array.from(new Set(games.map(g => g.tag)))], [])
   const filteredGames = useMemo(() => subjectFilter === 'Todos' ? games : games.filter(g => g.tag === subjectFilter), [subjectFilter])
-  const activeRole = members.find(m => m.group_id === activeGroupId && m.user_id === user?.id)?.role
+  const activeRole = myMemberships.find(m => m.group_id === activeGroupId && m.user_id === user?.id)?.role
 
   useEffect(() => {
     if (!user) return
@@ -57,18 +60,39 @@ export default function Hub() {
     if (!user) return
     const { data: memberRows } = await supabase.from('group_members').select('*').eq('user_id', user.id)
     const memberData = (memberRows || []) as GroupMember[]
-    setMembers(memberData)
+    setMyMemberships(memberData)
     const ids = memberData.map(m => m.group_id)
-    if (!ids.length) { setGroups([]); return }
+    if (!ids.length) {
+      setGroups([])
+      setGroupMembers([])
+      setGroupInvites([])
+      return
+    }
     const { data: groupRows } = await supabase.from('groups').select('id,name').in('id', ids)
-    setGroups((groupRows || []) as GroupRow[])
-    if (!activeGroupId && groupRows?.[0]?.id) {
-      setActiveGroupId(groupRows[0].id)
-      localStorage.setItem('activeGroupId', groupRows[0].id)
+    const gRows = (groupRows || []) as GroupRow[]
+    setGroups(gRows)
+
+    let resolvedActive = activeGroupId
+    if (!resolvedActive || !ids.includes(resolvedActive)) {
+      resolvedActive = gRows?.[0]?.id || ''
+      setActiveGroupId(resolvedActive)
+      if (resolvedActive) localStorage.setItem('activeGroupId', resolvedActive)
+    }
+
+    if (resolvedActive) {
+      const { data: fullMembers } = await supabase.from('group_members').select('*').eq('group_id', resolvedActive)
+      setGroupMembers((fullMembers || []) as GroupMember[])
+
+      const { data: invites } = await supabase
+        .from('group_invites')
+        .select('id,group_id,email,token,accepted_at')
+        .eq('group_id', resolvedActive)
+        .is('accepted_at', null)
+      setGroupInvites((invites || []) as GroupInvite[])
     }
   }
 
-  useEffect(() => { refreshGroups() }, [user])
+  useEffect(() => { refreshGroups() }, [user, activeGroupId])
 
   const createGroup = async () => {
     if (!user || !newGroupName.trim()) return
@@ -84,16 +108,24 @@ export default function Hub() {
     if (!user || !activeGroupId || !inviteEmail.trim()) return
     setGroupMsg('')
     const token = crypto.randomUUID()
+    const email = inviteEmail.trim().toLowerCase()
     const { error } = await supabase.from('group_invites').insert({
       group_id: activeGroupId,
-      email: inviteEmail.trim().toLowerCase(),
+      email,
       invited_by: user.id,
       token
     })
     if (error) { setGroupMsg('Erro ao gerar convite.'); return }
-    await sendMagicLink(inviteEmail.trim().toLowerCase(), `/auth?invite=${token}`)
+    await sendMagicLink(email, `/auth?invite=${token}`)
     setInviteEmail('')
     setGroupMsg('Convite enviado por email com link mágico!')
+    await refreshGroups()
+  }
+
+  const resendInvite = async (invite: GroupInvite) => {
+    setGroupMsg('')
+    await sendMagicLink(invite.email, `/auth?invite=${invite.token}`)
+    setGroupMsg(`Magic link reenviado para ${invite.email}`)
   }
 
   const promoteToAdmin = async (memberUserId: string) => {
@@ -261,14 +293,26 @@ export default function Hub() {
                 </button>
               )}
 
-              {(activeRole === 'owner' || activeRole === 'admin') && (
+              {activeGroupId && (
                 <div style={{ marginTop: 14 }}>
                   <p style={{ fontWeight: 700 }}>Membros</p>
-                  {members.filter(m => m.group_id === activeGroupId).map(m => (
+                  {groupMembers.length === 0 && <p className="muted">Nenhum membro encontrado.</p>}
+                  {groupMembers.map(m => (
                     <div key={m.user_id} style={{ marginTop: 6, padding: 8, border: '1px solid #2e3f5f', borderRadius: 8 }}>
                       <div style={{ fontSize: '.88rem' }}>{m.user_email} — <b>{m.role}</b></div>
                       {activeRole === 'owner' && m.role === 'member' && (
                         <button className="group-btn" style={{ marginTop: 6, padding: 8 }} onClick={() => promoteToAdmin(m.user_id)}>Tornar admin</button>
+                      )}
+                    </div>
+                  ))}
+
+                  <p style={{ fontWeight: 700, marginTop: 12 }}>Pendentes (ainda não confirmaram)</p>
+                  {groupInvites.length === 0 && <p className="muted">Nenhum convite pendente.</p>}
+                  {groupInvites.map(inv => (
+                    <div key={inv.id} style={{ marginTop: 6, padding: 8, border: '1px dashed #475569', borderRadius: 8 }}>
+                      <div style={{ fontSize: '.86rem' }}>{inv.email} — <b>pendente</b></div>
+                      {(activeRole === 'owner' || activeRole === 'admin') && (
+                        <button className="group-btn" style={{ marginTop: 6, padding: 8 }} onClick={() => resendInvite(inv)}>Reenviar magic link</button>
                       )}
                     </div>
                   ))}
