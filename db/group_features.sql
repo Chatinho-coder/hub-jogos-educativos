@@ -66,6 +66,10 @@ drop policy if exists groups_insert_owner on public.groups;
 create policy groups_insert_owner on public.groups
 for insert with check (owner_id = auth.uid());
 
+drop policy if exists groups_delete_owner on public.groups;
+create policy groups_delete_owner on public.groups
+for delete using (owner_id = auth.uid());
+
 drop policy if exists group_members_select_member on public.group_members;
 create policy group_members_select_member on public.group_members
 for select using (public.is_group_member(group_members.group_id, auth.uid()));

@@ -35,6 +35,7 @@ export default function Hub() {
   const [newGroupName, setNewGroupName] = useState('')
   const [inviteEmail, setInviteEmail] = useState('')
   const [groupMsg, setGroupMsg] = useState('')
+  const [showCreateGroup, setShowCreateGroup] = useState(false)
   const username = user?.email?.split('@')[0] ?? 'jogador'
 
   const subjects = useMemo(() => ['Todos', ...Array.from(new Set(games.map(g => g.tag)))], [])
@@ -101,6 +102,19 @@ export default function Hub() {
     await refreshGroups()
   }
 
+  const deleteGroup = async (groupId: string) => {
+    if (!confirm('Tem certeza que deseja excluir este grupo?')) return
+    setGroupMsg('')
+    const { error } = await supabase.from('groups').delete().eq('id', groupId)
+    if (error) { setGroupMsg(`Erro ao excluir grupo: ${error.message}`); return }
+    if (activeGroupId === groupId) {
+      setActiveGroupId('')
+      localStorage.removeItem('activeGroupId')
+    }
+    setGroupMsg('Grupo excluído.')
+    await refreshGroups()
+  }
+
   return (
     <>
       <style>{`
@@ -138,6 +152,8 @@ export default function Hub() {
         .profile-card { background:#1a1a2e; border:1px solid rgba(255,255,255,.08); border-radius:20px; padding:24px; width:100%; max-width:480px; max-height:90vh; overflow:auto; }
         .group-input { width:100%; margin-top:8px; background:#10192b; border:1px solid #2e3f5f; color:#fff; border-radius:10px; padding:10px; }
         .group-btn { margin-top:8px; width:100%; border:none; border-radius:10px; padding:10px; font-weight:700; cursor:pointer; background:linear-gradient(135deg,#22c55e,#16a34a); color:#04210f; }
+        .group-plus-btn { width:28px; height:28px; border-radius:999px; border:1px solid rgba(255,255,255,.15); background:rgba(255,255,255,.05); color:#d1d5db; font-size:1rem; font-weight:800; cursor:pointer; }
+        .group-delete-btn { margin-top:6px; width:100%; border:1px solid rgba(248,113,113,.35); border-radius:8px; padding:7px; font-size:.78rem; font-weight:700; cursor:pointer; background:rgba(127,29,29,.25); color:#fecaca; }
         .profile-close { width:100%; margin-top:14px; background: rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.1); color:#e5e7eb; border-radius:10px; padding:10px; cursor:pointer; }
       `}</style>
 
@@ -198,18 +214,31 @@ export default function Hub() {
           <div className="profile-overlay" onClick={() => setShowGroups(false)}>
             <div className="profile-card" onClick={e => e.stopPropagation()}>
               <h3>👥 Grupos</h3>
-              <p className="muted" style={{ marginTop: 4 }}>Crie grupo, convide por email com link mágico e use ranking por grupo.</p>
-
-              <input className="group-input" placeholder="Nome do grupo" value={newGroupName} onChange={e => setNewGroupName(e.target.value)} />
-              <button className="group-btn" onClick={createGroup}>Criar grupo</button>
+              <p className="muted" style={{ marginTop: 4 }}>Convide por email com link mágico e use ranking por grupo.</p>
 
               <div style={{ marginTop: 14 }}>
-                <p style={{ fontWeight: 700, marginBottom: 6 }}>Meus grupos</p>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                  <p style={{ fontWeight: 700 }}>Meus grupos</p>
+                  <button className="group-plus-btn" title="Novo grupo" onClick={() => setShowCreateGroup(v => !v)}>+</button>
+                </div>
+
+                {showCreateGroup && (
+                  <>
+                    <input className="group-input" placeholder="Nome do novo grupo" value={newGroupName} onChange={e => setNewGroupName(e.target.value)} />
+                    <button className="group-btn" onClick={createGroup}>Criar grupo</button>
+                  </>
+                )}
+
                 {groups.length === 0 && <p className="muted">Você ainda não participa de grupos.</p>}
                 {groups.map(g => (
-                  <button key={g.id} className="group-input" style={{ cursor: 'pointer', borderColor: activeGroupId === g.id ? '#22c55e' : '#2e3f5f' }} onClick={() => { setActiveGroupId(g.id); localStorage.setItem('activeGroupId', g.id) }}>
-                    {g.name} {activeGroupId === g.id ? '✅' : ''}
-                  </button>
+                  <div key={g.id} style={{ marginBottom: 8 }}>
+                    <button className="group-input" style={{ cursor: 'pointer', borderColor: activeGroupId === g.id ? '#22c55e' : '#2e3f5f' }} onClick={() => { setActiveGroupId(g.id); localStorage.setItem('activeGroupId', g.id) }}>
+                      {g.name} {activeGroupId === g.id ? '✅' : ''}
+                    </button>
+                    {activeRole === 'owner' && activeGroupId === g.id && (
+                      <button className="group-delete-btn" onClick={() => deleteGroup(g.id)}>Excluir grupo</button>
+                    )}
+                  </div>
                 ))}
               </div>
 
