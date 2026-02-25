@@ -44,6 +44,10 @@ export default function Hub() {
   const subjects = useMemo(() => ['Todos', ...Array.from(new Set(games.map(g => g.tag)))], [])
   const filteredGames = useMemo(() => subjectFilter === 'Todos' ? games : games.filter(g => g.tag === subjectFilter), [subjectFilter])
   const activeRole = myMemberships.find(m => m.group_id === activeGroupId && m.user_id === user?.id)?.role
+  const pendingInvites = useMemo(() => {
+    const memberEmails = new Set(groupMembers.map(m => (m.user_email || '').trim().toLowerCase()))
+    return groupInvites.filter(inv => !memberEmails.has((inv.email || '').trim().toLowerCase()))
+  }, [groupInvites, groupMembers])
 
   useEffect(() => {
     if (!user) return
@@ -307,8 +311,8 @@ export default function Hub() {
                   ))}
 
                   <p style={{ fontWeight: 700, marginTop: 12 }}>Pendentes (ainda não confirmaram)</p>
-                  {groupInvites.length === 0 && <p className="muted">Nenhum convite pendente.</p>}
-                  {groupInvites.map(inv => (
+                  {pendingInvites.length === 0 && <p className="muted">Nenhum convite pendente.</p>}
+                  {pendingInvites.map(inv => (
                     <div key={inv.id} style={{ marginTop: 6, padding: 8, border: '1px dashed #475569', borderRadius: 8 }}>
                       <div style={{ fontSize: '.86rem' }}>{inv.email} — <b>pendente</b></div>
                       {(activeRole === 'owner' || activeRole === 'admin') && (
