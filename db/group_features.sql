@@ -56,6 +56,16 @@ for select using (
 drop policy if exists group_members_insert_admin on public.group_members;
 create policy group_members_insert_admin on public.group_members
 for insert with check (
+  (
+    user_id = auth.uid()
+    and role = 'owner'
+    and exists (
+      select 1 from public.groups g
+      where g.id = group_members.group_id
+        and g.owner_id = auth.uid()
+    )
+  )
+  or
   exists (
     select 1 from public.group_members gm
     where gm.group_id = group_members.group_id
