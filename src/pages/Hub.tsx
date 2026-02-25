@@ -125,9 +125,9 @@ export default function Hub() {
         .hub-header-inner { max-width: 1200px; margin: 0 auto; padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; }
         .hub-logo { font-size: 1.15rem; font-weight: 800; display: flex; align-items: center; gap: 10px; }
         .hub-logo-text { background: linear-gradient(135deg, #a78bfa, #ec4899); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .hub-nav { display: flex; align-items: center; gap: 10px; }
+        .hub-nav { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
         .hub-nav-btn,.hub-user-btn { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08); color: #d1d5db; font-size: 0.82rem; font-weight: 600; padding: 8px 14px; border-radius: 999px; cursor: pointer; }
-        .hub-signout { background: none; border: none; color: #4b5563; font-size: 0.75rem; cursor: pointer; text-decoration: underline; }
+        .hub-signout { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); color: #9ca3af; font-size: 0.78rem; font-weight: 700; padding: 8px 12px; border-radius: 999px; cursor: pointer; text-decoration: none; }
         .hub-content { position: relative; z-index: 1; max-width: 1200px; margin: 0 auto; padding: 44px 24px 80px; }
         .hub-hero { text-align: center; margin-bottom: 26px; }
         .hub-greeting { font-size: clamp(1.6rem, 4vw, 2.4rem); font-weight: 800; margin-bottom: 8px; }
@@ -138,6 +138,12 @@ export default function Hub() {
         .filter-btn.active { background:linear-gradient(135deg,#8b5cf6,#ec4899); border-color:transparent; color:#fff; }
         .hub-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
         @media (max-width: 1080px) { .hub-grid { grid-template-columns: repeat(2,1fr); } }
+        @media (max-width: 760px) {
+          .hub-header-inner { padding: 12px 12px; gap: 10px; align-items: flex-start; }
+          .hub-logo { font-size: 1rem; }
+          .hub-nav { width: 100%; gap: 8px; }
+          .hub-nav-btn,.hub-user-btn,.hub-signout { font-size: 0.78rem; padding: 7px 11px; }
+        }
         @media (max-width: 640px) { .hub-grid { grid-template-columns: 1fr; } .hub-content { padding: 30px 16px 60px; } }
         .game-card { border-radius: 20px; overflow: hidden; cursor: pointer; transition: transform .25s; border: 1px solid rgba(255,255,255,0.06); background: rgba(255,255,255,0.03); }
         .game-card:hover { transform: translateY(-4px); }
