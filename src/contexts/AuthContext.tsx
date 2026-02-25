@@ -8,6 +8,7 @@ interface AuthContextType {
   loading: boolean
   signIn: (email: string, password: string) => Promise<void>
   signUp: (email: string, password: string) => Promise<void>
+  sendMagicLink: (email: string, redirectPath?: string) => Promise<void>
   signOut: () => Promise<void>
 }
 
@@ -42,13 +43,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (error) throw error
   }
 
+  const sendMagicLink = async (email: string, redirectPath = '/auth') => {
+    const redirectTo = `${window.location.origin}${redirectPath}`
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: { emailRedirectTo: redirectTo }
+    })
+    if (error) throw error
+  }
+
   const signOut = async () => {
     const { error } = await supabase.auth.signOut()
     if (error) throw error
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, signIn, signUp, signOut }}>
+    <AuthContext.Provider value={{ user, loading, signIn, signUp, sendMagicLink, signOut }}>
       {children}
     </AuthContext.Provider>
   )
