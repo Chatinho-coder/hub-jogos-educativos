@@ -31,14 +31,36 @@ alter table public.groups enable row level security;
 alter table public.group_members enable row level security;
 alter table public.group_invites enable row level security;
 
+create or replace function public.is_group_member(_group_id uuid, _user_id uuid)
+returns boolean
+language sql
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1 from public.group_members gm
+    where gm.group_id = _group_id and gm.user_id = _user_id
+  );
+$$;
+
+create or replace function public.is_group_admin_or_owner(_group_id uuid, _user_id uuid)
+returns boolean
+language sql
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1 from public.group_members gm
+    where gm.group_id = _group_id and gm.user_id = _user_id and gm.role in ('owner','admin')
+  );
+$$;
+
+grant execute on function public.is_group_member(uuid,uuid) to anon, authenticated;
+grant execute on function public.is_group_admin_or_owner(uuid,uuid) to anon, authenticated;
+
 drop policy if exists groups_select_member on public.groups;
 create policy groups_select_member on public.groups
-for select using (
-  exists (
-    select 1 from public.group_members gm
-    where gm.group_id = groups.id and gm.user_id = auth.uid()
-  )
-);
+for select using (public.is_group_member(groups.id, auth.uid()));
 
 drop policy if exists groups_insert_owner on public.groups;
 create policy groups_insert_owner on public.groups
@@ -46,12 +68,7 @@ for insert with check (owner_id = auth.uid());
 
 drop policy if exists group_members_select_member on public.group_members;
 create policy group_members_select_member on public.group_members
-for select using (
-  exists (
-    select 1 from public.group_members gm
-    where gm.group_id = group_members.group_id and gm.user_id = auth.uid()
-  )
-);
+for select using (public.is_group_member(group_members.group_id, auth.uid()));
 
 drop policy if exists group_members_insert_admin on public.group_members;
 create policy group_members_insert_admin on public.group_members
@@ -65,47 +82,25 @@ for insert with check (
         and g.owner_id = auth.uid()
     )
   )
-  or
-  exists (
-    select 1 from public.group_members gm
-    where gm.group_id = group_members.group_id
-      and gm.user_id = auth.uid()
-      and gm.role in ('owner','admin')
-  )
+  or public.is_group_admin_or_owner(group_members.group_id, auth.uid())
 );
 
 drop policy if exists group_members_update_owner on public.group_members;
 create policy group_members_update_owner on public.group_members
 for update using (
   exists (
-    select 1 from public.group_members gm
-    where gm.group_id = group_members.group_id
-      and gm.user_id = auth.uid()
-      and gm.role = 'owner'
+    select 1 from public.groups g
+    where g.id = group_members.group_id and g.owner_id = auth.uid()
   )
 );
 
 drop policy if exists group_invites_select_admin on public.group_invites;
 create policy group_invites_select_admin on public.group_invites
-for select using (
-  exists (
-    select 1 from public.group_members gm
-    where gm.group_id = group_invites.group_id
-      and gm.user_id = auth.uid()
-      and gm.role in ('owner','admin')
-  )
-);
+for select using (public.is_group_admin_or_owner(group_invites.group_id, auth.uid()));
 
 drop policy if exists group_invites_insert_admin on public.group_invites;
 create policy group_invites_insert_admin on public.group_invites
-for insert with check (
-  exists (
-    select 1 from public.group_members gm
-    where gm.group_id = group_invites.group_id
-      and gm.user_id = auth.uid()
-      and gm.role in ('owner','admin')
-  )
-);
+for insert with check (public.is_group_admin_or_owner(group_invites.group_id, auth.uid()));
 
 create or replace function public.accept_group_invite(invite_token text)
 returns void
