@@ -18,7 +18,12 @@ export default function Auth() {
 
   useEffect(() => {
     const inviteToken = searchParams.get('invite')
-    if (!user || !inviteToken) return
+    if (!user) return
+
+    if (!inviteToken) {
+      navigate('/', { replace: true })
+      return
+    }
 
     supabase.rpc('accept_group_invite', { invite_token: inviteToken })
       .then(({ error }) => {
@@ -26,7 +31,7 @@ export default function Auth() {
           setError('Entrou com sucesso, mas não consegui aplicar o convite automaticamente.')
         } else {
           setSuccess('Você entrou no grupo com sucesso!')
-          navigate('/')
+          navigate('/', { replace: true })
         }
       })
   }, [user, searchParams, navigate])
@@ -46,7 +51,7 @@ export default function Auth() {
         setSuccess('Conta criada! Verifique seu email para confirmar.')
       } else {
         const inviteToken = searchParams.get('invite')
-        const redirect = inviteToken ? `/auth?invite=${inviteToken}` : '/auth'
+        const redirect = inviteToken ? `/auth?invite=${inviteToken}` : '/'
         await sendMagicLink(email, redirect)
         setSuccess('Link mágico enviado! Verifique seu email para entrar.')
       }
