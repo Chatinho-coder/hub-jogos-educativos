@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Tabuada Rush 🏎️💨</title>
+    <title>Tabuada Rush</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <style>
@@ -11,44 +11,52 @@
             font-family: 'Roboto', sans-serif;
             background-color: #1a1a2e;
             color: #fff;
-            overflow: hidden; /* Prevent scroll bounce */
+            overflow: hidden;
             touch-action: manipulation;
             position: fixed;
             width: 100%;
             height: 100vh;
-            height: 100dvh; /* Dynamic viewport height for mobile */
+            height: 100dvh;
         }
+
         .retro-font {
             font-family: 'Press Start 2P', cursive;
         }
+
         .btn-push {
             transition: transform 0.1s, box-shadow 0.1s;
             box-shadow: 0 4px 0 #000;
         }
+
         .btn-push:active {
             transform: translateY(4px);
             box-shadow: 0 0 0 #000;
         }
+
         .shake {
-            animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+            animation: shake 0.5s cubic-bezier(.36, .07, .19, .97) both;
         }
+
         @keyframes shake {
             10%, 90% { transform: translate3d(-1px, 0, 0); }
             20%, 80% { transform: translate3d(2px, 0, 0); }
             30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
             40%, 60% { transform: translate3d(4px, 0, 0); }
         }
+
         .pop-in {
             animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
+
         @keyframes popIn {
             0% { transform: scale(0.5); opacity: 0; }
             100% { transform: scale(1); opacity: 1; }
         }
-        /* Custom neon glow */
+
         .neon-text {
             text-shadow: 0 0 5px #fff, 0 0 10px #fff, 0 0 20px #ff00de, 0 0 30px #ff00de, 0 0 40px #ff00de;
         }
+
         .progress-bar {
             transition: width 0.1s linear;
         }
@@ -56,113 +64,138 @@
 </head>
 <body class="h-screen flex flex-col items-center justify-center bg-gray-900 selection:bg-pink-500 selection:text-white">
 
-    <!-- Audio Context Warning (Overlay) -->
-    <div id="start-screen" class="absolute inset-0 z-50 flex flex-col items-center justify-center bg-gray-900 bg-opacity-95 text-center p-4">
-        <h1 class="text-4xl md:text-6xl text-yellow-400 retro-font mb-4 neon-text">TABUADA<br>RUSH</h1>
-        <p class="text-gray-300 mb-8 text-lg">Treine sua mente na velocidade da luz!</p>
-        
-        <div class="grid grid-cols-1 gap-4 w-full max-w-xs">
-            <button onclick="startGame('rush')" class="btn-push bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold py-4 px-8 rounded-lg text-xl border-b-4 border-purple-800 hover:brightness-110 w-full">
-                🚀 MODO TURBO (60s)
+    <div id="start-screen" class="absolute inset-0 z-50 flex flex-col items-center justify-center bg-gray-900 bg-opacity-95 p-4 text-center">
+        <h1 class="retro-font mb-4 text-4xl text-yellow-400 neon-text md:text-6xl">TABUADA<br>RUSH</h1>
+        <p class="mb-8 text-lg text-gray-300">Treine sua mente na velocidade da luz.</p>
+
+        <div class="grid w-full max-w-xs grid-cols-1 gap-4">
+            <button onclick="startGame('rush')" class="btn-push w-full rounded-lg border-b-4 border-purple-800 bg-gradient-to-r from-purple-500 to-pink-500 px-8 py-4 text-xl font-bold text-white hover:brightness-110">
+                MODO TURBO (60s)
             </button>
-            <button onclick="startGame('practice')" class="btn-push bg-gradient-to-r from-green-500 to-teal-500 text-white font-bold py-4 px-8 rounded-lg text-xl border-b-4 border-green-800 hover:brightness-110 w-full">
-                🧠 TREINO LIVRE
+            <button onclick="startGame('practice')" class="btn-push w-full rounded-lg border-b-4 border-green-800 bg-gradient-to-r from-green-500 to-teal-500 px-8 py-4 text-xl font-bold text-white hover:brightness-110">
+                TREINO LIVRE
+            </button>
+            <button id="custom-mode-toggle" onclick="toggleCustomModePanel()" class="btn-push w-full rounded-lg border-b-4 border-amber-800 bg-gradient-to-r from-amber-500 to-orange-500 px-8 py-4 text-xl font-bold text-white hover:brightness-110">
+                TABUADAS ESCOLHIDAS
             </button>
         </div>
-        
-        <div class="mt-8 text-gray-500 text-sm">v1.0 • Foco em Agilidade Mental</div>
+
+        <div id="custom-mode-panel" class="hidden mt-5 w-full max-w-sm rounded-2xl border border-amber-500/40 bg-gray-800/90 p-4 text-left shadow-2xl">
+            <div class="mb-3">
+                <div class="text-sm font-bold uppercase tracking-wider text-amber-300">Modo Personalizado</div>
+                <p class="mt-1 text-sm text-gray-300">Escolha uma ou mais tabuadas. As perguntas vao usar apenas as selecionadas.</p>
+            </div>
+
+            <div id="table-selector" class="grid grid-cols-3 gap-2"></div>
+
+            <div class="mt-3 flex gap-2">
+                <button onclick="selectAllTables()" class="rounded-lg bg-gray-700 px-3 py-2 text-sm font-bold text-white transition hover:bg-gray-600">
+                    Todas
+                </button>
+                <button onclick="clearTableSelection()" class="rounded-lg bg-gray-700 px-3 py-2 text-sm font-bold text-white transition hover:bg-gray-600">
+                    Limpar
+                </button>
+            </div>
+
+            <p id="table-selection-status" class="mt-3 text-xs text-gray-400">Selecione ao menos uma tabuada para liberar este modo.</p>
+
+            <div class="mt-4 grid grid-cols-1 gap-3">
+                <button id="custom-rush-button" onclick="startSelectedTablesMode('rush')" disabled class="btn-push rounded-lg border-b-4 border-amber-900 bg-gradient-to-r from-amber-500 to-orange-500 px-6 py-3 text-base font-bold text-white opacity-50 transition">
+                    Jogar Turbo (60s)
+                </button>
+                <button id="custom-practice-button" onclick="startSelectedTablesMode('practice')" disabled class="btn-push rounded-lg border-b-4 border-teal-900 bg-gradient-to-r from-emerald-500 to-teal-500 px-6 py-3 text-base font-bold text-white opacity-50 transition">
+                    Jogar Treino Livre
+                </button>
+            </div>
+        </div>
+
+        <div class="mt-8 text-sm text-gray-500">v1.1 - Foco em Agilidade Mental</div>
     </div>
 
-    <!-- Game UI -->
-    <div id="game-ui" class="hidden flex-col w-full max-w-md p-4 relative" style="height: 100vh; height: 100dvh; padding-bottom: max(6rem, env(safe-area-inset-bottom) + 5rem); overflow-y: auto;">
-        
-        <!-- Top Bar with Exit Button -->
-        <div class="flex justify-between items-start mb-6">
-            <div class="bg-gray-800 rounded-full px-5 py-2 border border-gray-700">
-                <span class="text-gray-400 text-xs uppercase tracking-wider">Pontos</span>
+    <div id="game-ui" class="relative hidden w-full max-w-md flex-col p-4" style="height: 100vh; height: 100dvh; padding-bottom: max(6rem, env(safe-area-inset-bottom) + 5rem); overflow-y: auto;">
+        <div class="mb-6 flex items-start justify-between">
+            <div class="rounded-full border border-gray-700 bg-gray-800 px-5 py-2">
+                <span class="text-xs uppercase tracking-wider text-gray-400">Pontos</span>
                 <div id="score-display" class="text-2xl font-bold text-yellow-400">0</div>
             </div>
-            
-            <div class="flex flex-col gap-2 items-end">
-                <button onclick="confirmExit()" class="bg-red-500 hover:bg-red-600 text-white text-xs font-bold py-1.5 px-3 rounded-full border-b-2 border-red-800 shadow-lg">
-                    ❌
+
+            <div class="flex flex-col items-end gap-2">
+                <button onclick="confirmExit()" class="rounded-full border-b-2 border-red-800 bg-red-500 px-3 py-1.5 text-xs font-bold text-white shadow-lg hover:bg-red-600">
+                    X
                 </button>
-                
-                <div class="bg-gray-800 rounded-full px-5 py-2 border border-gray-700 flex flex-col items-end">
-                    <span class="text-gray-400 text-xs uppercase tracking-wider">Tempo</span>
+
+                <div id="timer-wrapper" class="flex flex-col items-end rounded-full border border-gray-700 bg-gray-800 px-5 py-2">
+                    <span class="text-xs uppercase tracking-wider text-gray-400">Tempo</span>
                     <div id="timer-display" class="text-2xl font-bold text-white">60</div>
                 </div>
-                
-                <div class="bg-gray-800 rounded-full px-4 py-1.5 border border-gray-700">
-                    <span class="text-gray-400 text-xs">📊 <span id="questions-count">0</span></span>
+
+                <div class="rounded-full border border-gray-700 bg-gray-800 px-4 py-1.5">
+                    <span class="text-xs text-gray-400">Perguntas: <span id="questions-count">0</span></span>
+                </div>
+
+                <div class="max-w-[180px] rounded-full border border-gray-700 bg-gray-800 px-4 py-1.5">
+                    <span class="text-[11px] uppercase tracking-wider text-gray-400">Tabuadas</span>
+                    <div id="tables-display" class="truncate text-right text-sm font-bold text-amber-300">2 a 10</div>
                 </div>
             </div>
         </div>
 
-        <!-- Progress Bar (Health/Combo Timer) -->
-        <div class="w-full bg-gray-700 h-2 rounded-full mb-8 overflow-hidden relative">
-            <div id="time-bar" class="h-full bg-gradient-to-r from-green-400 to-blue-500 progress-bar w-full"></div>
+        <div id="time-bar-wrapper" class="relative mb-8 h-2 w-full overflow-hidden rounded-full bg-gray-700">
+            <div id="time-bar" class="progress-bar h-full w-full bg-gradient-to-r from-green-400 to-blue-500"></div>
         </div>
 
-        <!-- Question Area -->
-        <div class="flex flex-col items-center justify-center mb-6 relative">
-            <div id="combo-display" class="absolute -top-10 left-0 right-0 text-center text-yellow-300 font-bold text-2xl opacity-0 transition-all duration-300 transform scale-90 z-10 drop-shadow-lg">
-                COMBO x2! 🔥
+        <div class="relative mb-6 flex flex-col items-center justify-center">
+            <div id="combo-display" class="absolute -top-10 left-0 right-0 z-10 scale-90 text-center text-2xl font-bold text-yellow-300 opacity-0 transition-all duration-300 drop-shadow-lg">
+                COMBO x2!
             </div>
-            
-            <div id="question-card" class="bg-gray-800 border-2 border-gray-600 rounded-2xl p-8 w-full text-center shadow-2xl relative overflow-hidden transition-all duration-200">
-                <!-- Background visual flair -->
+
+            <div id="question-card" class="relative w-full overflow-hidden rounded-2xl border-2 border-gray-600 bg-gray-800 p-8 text-center shadow-2xl transition-all duration-200">
                 <div class="absolute inset-0 opacity-10 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMiIgY3k9IjIiIHI9IjIiIGZpbGw9IiNmZmYiLz48L3N2Zz4=')]"></div>
-                
-                <div id="question-text" class="text-5xl font-bold text-white relative z-10 retro-font tracking-widest whitespace-nowrap">
+                <div id="question-text" class="retro-font relative z-10 whitespace-nowrap text-5xl font-bold tracking-widest text-white">
                     ? x ?
                 </div>
             </div>
         </div>
 
-        <!-- Answers Grid -->
-        <div id="answers-grid" class="grid grid-cols-2 gap-4">
-            <!-- Buttons injected by JS -->
-        </div>
+        <div id="answers-grid" class="grid grid-cols-2 gap-4"></div>
 
-        <!-- Feedback Overlay -->
-        <div id="feedback-overlay" class="pointer-events-none fixed inset-0 flex items-center justify-center z-40 opacity-0 transition-opacity duration-200">
-            <div id="feedback-icon" class="text-9xl filter drop-shadow-lg">✅</div>
+        <div id="feedback-overlay" class="pointer-events-none fixed inset-0 z-40 flex items-center justify-center opacity-0 transition-opacity duration-200">
+            <div id="feedback-icon" class="text-9xl drop-shadow-lg">OK</div>
         </div>
     </div>
 
-    <!-- Game Over Screen -->
-    <div id="game-over" class="hidden absolute inset-0 z-50 flex flex-col items-center justify-center bg-gray-900 text-center p-6">
-        <h2 class="text-4xl text-white retro-font mb-2">FIM DE JOGO!</h2>
-        <div class="text-6xl mb-6">🏁</div>
-        
-        <div class="bg-gray-800 rounded-xl p-6 w-full max-w-sm border border-gray-700 mb-8">
-            <div class="text-gray-400 text-sm uppercase mb-1">Pontuação Final</div>
-            <div id="final-score" class="text-5xl font-bold text-yellow-400 mb-4">0</div>
-            
-            <div class="grid grid-cols-3 gap-4 text-sm text-gray-300 border-t border-gray-700 pt-4">
+    <div id="game-over" class="absolute inset-0 z-50 hidden flex-col items-center justify-center bg-gray-900 p-6 text-center">
+        <h2 class="retro-font mb-2 text-4xl text-white">FIM DE JOGO!</h2>
+        <div class="mb-6 text-6xl">FIM</div>
+
+        <div class="mb-8 w-full max-w-sm rounded-xl border border-gray-700 bg-gray-800 p-6">
+            <div class="mb-1 text-sm uppercase text-gray-400">Pontuacao Final</div>
+            <div id="final-score" class="mb-4 text-5xl font-bold text-yellow-400">0</div>
+
+            <div class="grid grid-cols-3 gap-4 border-t border-gray-700 pt-4 text-sm text-gray-300">
                 <div class="text-center">
-                    <div class="text-gray-500 text-xs mb-1">Perguntas</div>
+                    <div class="mb-1 text-xs text-gray-500">Perguntas</div>
                     <b id="final-questions">0</b>
                 </div>
                 <div class="text-center">
-                    <div class="text-gray-500 text-xs mb-1">Precisão</div>
+                    <div class="mb-1 text-xs text-gray-500">Precisao</div>
                     <b id="final-accuracy">0%</b>
                 </div>
                 <div class="text-center">
-                    <div class="text-gray-500 text-xs mb-1">Max Combo</div>
+                    <div class="mb-1 text-xs text-gray-500">Max Combo</div>
                     <b id="final-combo">0</b>
                 </div>
             </div>
         </div>
 
-        <button onclick="location.reload()" class="btn-push bg-white text-gray-900 font-bold py-4 px-8 rounded-lg text-xl w-full max-w-xs border-b-4 border-gray-400 hover:bg-gray-100">
-            🔄 JOGAR NOVAMENTE
+        <button onclick="location.reload()" class="btn-push w-full max-w-xs rounded-lg border-b-4 border-gray-400 bg-white px-8 py-4 text-xl font-bold text-gray-900 hover:bg-gray-100">
+            JOGAR NOVAMENTE
         </button>
     </div>
 
     <script>
-        // Game State
+        const AVAILABLE_TABLES = [2, 3, 4, 5, 6, 7, 8, 9, 10];
+
         let state = {
             score: 0,
             timeLeft: 60,
@@ -172,23 +205,28 @@
             maxCombo: 0,
             correctCount: 0,
             totalAnswered: 0,
-            mode: 'rush', // 'rush' or 'practice'
-            timerInterval: null
+            mode: 'rush',
+            timerInterval: null,
+            selectedTables: []
         };
 
-        // Audio System (Simple Synthesis)
+        let customTableSelection = [];
+
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        
+
         function playSound(type) {
-            if (audioCtx.state === 'suspended') audioCtx.resume();
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+
             const oscillator = audioCtx.createOscillator();
             const gainNode = audioCtx.createGain();
-            
+
             oscillator.connect(gainNode);
             gainNode.connect(audioCtx.destination);
-            
+
             const now = audioCtx.currentTime;
-            
+
             if (type === 'correct') {
                 oscillator.type = 'sine';
                 oscillator.frequency.setValueAtTime(500, now);
@@ -215,45 +253,126 @@
             }
         }
 
-        // Logic
+        function formatTablesLabel(tables) {
+            if (!tables || tables.length === 0 || tables.length === AVAILABLE_TABLES.length) {
+                return '2 a 10';
+            }
+
+            return tables.join(', ');
+        }
+
+        function toggleCustomModePanel() {
+            document.getElementById('custom-mode-panel').classList.toggle('hidden');
+        }
+
+        function updateTableSelectionUI() {
+            const selector = document.getElementById('table-selector');
+            selector.innerHTML = '';
+
+            AVAILABLE_TABLES.forEach(table => {
+                const isSelected = customTableSelection.includes(table);
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.className = `rounded-xl border px-3 py-3 text-center text-lg font-bold transition ${isSelected ? 'border-amber-300 bg-amber-500 text-white shadow-lg shadow-amber-500/20' : 'border-gray-600 bg-gray-900 text-gray-200 hover:border-amber-400 hover:text-white'}`;
+                button.innerText = `${table}`;
+                button.onclick = () => toggleTableSelection(table);
+                selector.appendChild(button);
+            });
+
+            const hasSelection = customTableSelection.length > 0;
+            const status = document.getElementById('table-selection-status');
+            const rushButton = document.getElementById('custom-rush-button');
+            const practiceButton = document.getElementById('custom-practice-button');
+
+            status.innerText = hasSelection
+                ? `Tabuadas ativas: ${customTableSelection.join(', ')}`
+                : 'Selecione ao menos uma tabuada para liberar este modo.';
+            status.className = hasSelection ? 'mt-3 text-xs text-amber-300' : 'mt-3 text-xs text-gray-400';
+
+            [rushButton, practiceButton].forEach(button => {
+                button.disabled = !hasSelection;
+                button.classList.toggle('opacity-50', !hasSelection);
+                button.classList.toggle('cursor-not-allowed', !hasSelection);
+            });
+        }
+
+        function toggleTableSelection(table) {
+            if (customTableSelection.includes(table)) {
+                customTableSelection = customTableSelection.filter(value => value !== table);
+            } else {
+                customTableSelection = [...customTableSelection, table].sort((a, b) => a - b);
+            }
+
+            updateTableSelectionUI();
+        }
+
+        function selectAllTables() {
+            customTableSelection = [...AVAILABLE_TABLES];
+            updateTableSelectionUI();
+        }
+
+        function clearTableSelection() {
+            customTableSelection = [];
+            updateTableSelectionUI();
+        }
+
+        function startSelectedTablesMode(mode) {
+            if (customTableSelection.length === 0) {
+                return;
+            }
+
+            startGame(mode, customTableSelection);
+        }
+
+        function getRandomTableValue() {
+            return AVAILABLE_TABLES[Math.floor(Math.random() * AVAILABLE_TABLES.length)];
+        }
+
+        function getQuestionFactors() {
+            const selectedPool = state.selectedTables.length > 0 ? state.selectedTables : AVAILABLE_TABLES;
+            let a = selectedPool[Math.floor(Math.random() * selectedPool.length)];
+            let b = getRandomTableValue();
+
+            if (Math.random() < 0.5) {
+                [a, b] = [b, a];
+            }
+
+            return { a, b };
+        }
+
         function generateQuestion() {
-            const a = Math.floor(Math.random() * 9) + 2; // 2 to 10
-            const b = Math.floor(Math.random() * 9) + 2;
+            const { a, b } = getQuestionFactors();
             const correct = a * b;
-            
-            // Generate wrong answers
-            let answers = new Set([correct]);
-            
-            // Strategies for believable wrong answers
+            const answers = new Set([correct]);
+
             const strategies = [
-                () => correct + (Math.random() < 0.5 ? 10 : -10), // Off by 10
-                () => correct + (Math.random() < 0.5 ? 1 : -1),   // Off by 1
-                () => a * (b + (Math.random() < 0.5 ? 1 : -1)),   // Neighbor table (e.g. 7x8 vs 7x9)
-                () => (a + (Math.random() < 0.5 ? 1 : -1)) * b,   // Neighbor table other side
-                () => correct + (Math.floor(Math.random() * 10) - 5) // Random close
+                () => correct + (Math.random() < 0.5 ? 10 : -10),
+                () => correct + (Math.random() < 0.5 ? 1 : -1),
+                () => a * (b + (Math.random() < 0.5 ? 1 : -1)),
+                () => (a + (Math.random() < 0.5 ? 1 : -1)) * b,
+                () => correct + (Math.floor(Math.random() * 10) - 5)
             ];
 
             let attempts = 0;
-            while(answers.size < 4 && attempts < 50) {
+            while (answers.size < 4 && attempts < 50) {
                 const strategy = strategies[Math.floor(Math.random() * strategies.length)];
                 let wrong = strategy();
-                
-                // Fallback to random if strategy fails or produces invalid
+
                 if (wrong <= 0 || wrong === correct) {
                     wrong = Math.floor(Math.random() * 81) + 4;
                 }
-                
-                if (wrong > 0 && wrong !== correct) answers.add(wrong);
+
+                if (wrong > 0 && wrong !== correct) {
+                    answers.add(wrong);
+                }
+
                 attempts++;
             }
-            
-            // Convert to array and shuffle
-            const options = Array.from(answers).sort(() => Math.random() - 0.5);
-            
+
             return {
                 text: `${a} x ${b}`,
-                correct: correct,
-                options: options
+                correct,
+                options: Array.from(answers).sort(() => Math.random() - 0.5)
             };
         }
 
@@ -261,29 +380,28 @@
             document.getElementById('score-display').innerText = state.score;
             document.getElementById('timer-display').innerText = state.timeLeft;
             document.getElementById('question-text').innerText = state.currentQuestion.text;
-            
-            // Render buttons
+            document.getElementById('questions-count').innerText = state.totalAnswered;
+            document.getElementById('tables-display').innerText = formatTablesLabel(state.selectedTables);
+
             const grid = document.getElementById('answers-grid');
             grid.innerHTML = '';
-            
+
             state.currentQuestion.options.forEach(opt => {
                 const btn = document.createElement('button');
-                btn.className = `btn-push bg-gray-700 text-white text-2xl md:text-3xl font-bold py-4 md:py-5 rounded-xl border-b-4 border-gray-900 hover:bg-gray-600 active:border-b-0 active:translate-y-1 transition-all w-full pop-in`;
+                btn.className = 'btn-push w-full rounded-xl border-b-4 border-gray-900 bg-gray-700 py-4 text-2xl font-bold text-white transition-all hover:bg-gray-600 active:translate-y-1 active:border-b-0 md:py-5 md:text-3xl pop-in';
                 btn.innerText = opt;
                 btn.onclick = () => handleAnswer(opt, btn);
                 grid.appendChild(btn);
             });
 
-            // Combo UI
             const comboEl = document.getElementById('combo-display');
             const questionCard = document.getElementById('question-card');
-            
+
             if (state.combo > 1) {
-                comboEl.innerText = `COMBO x${state.combo}! 🔥`;
+                comboEl.innerText = `COMBO x${state.combo}!`;
                 comboEl.style.opacity = '1';
                 comboEl.style.transform = 'scale(1.1)';
-                
-                // Add glow to question card on high combo
+
                 if (state.combo >= 3) {
                     questionCard.classList.add('ring-4', 'ring-yellow-400', 'ring-opacity-50');
                 } else {
@@ -294,36 +412,35 @@
                 comboEl.style.transform = 'scale(0.9)';
                 questionCard.classList.remove('ring-4', 'ring-yellow-400', 'ring-opacity-50');
             }
-            
-            // Questions counter
-            document.getElementById('questions-count').innerText = state.totalAnswered;
         }
 
         function handleAnswer(selected, btnElement) {
-            if (!state.isPlaying) return;
-            
+            if (!state.isPlaying) {
+                return;
+            }
+
             state.totalAnswered++;
             const isCorrect = selected === state.currentQuestion.correct;
-            
-            // Disable all buttons to prevent double-click
+
             const allBtns = document.querySelectorAll('#answers-grid button');
-            allBtns.forEach(b => b.disabled = true);
-            
+            allBtns.forEach(button => {
+                button.disabled = true;
+            });
+
             if (isCorrect) {
                 playSound('correct');
                 state.combo++;
                 state.correctCount++;
-                if (state.combo > state.maxCombo) state.maxCombo = state.combo;
-                
-                // Score calculation: Base (100) + Combo Bonus
-                const points = 100 + (state.combo * 10);
-                state.score += points;
-                
-                // Visual feedback on button
+
+                if (state.combo > state.maxCombo) {
+                    state.maxCombo = state.combo;
+                }
+
+                state.score += 100 + (state.combo * 10);
+
                 btnElement.classList.remove('bg-gray-700');
                 btnElement.classList.add('bg-green-500', 'border-green-700');
-                
-                // Small time bonus in Rush mode (max 60s)
+
                 if (state.mode === 'rush') {
                     state.timeLeft = Math.min(60, state.timeLeft + 1);
                 }
@@ -332,67 +449,68 @@
             } else {
                 playSound('wrong');
                 state.combo = 0;
-                
-                // Show wrong answer
+
                 btnElement.classList.remove('bg-gray-700');
                 btnElement.classList.add('bg-red-500', 'border-red-700', 'shake');
-                
-                // Highlight correct answer for learning
-                allBtns.forEach(b => {
-                    if (parseInt(b.innerText) === state.currentQuestion.correct) {
-                        b.classList.remove('bg-gray-700');
-                        b.classList.add('bg-green-500', 'border-green-700', 'animate-pulse');
+
+                allBtns.forEach(button => {
+                    if (parseInt(button.innerText, 10) === state.currentQuestion.correct) {
+                        button.classList.remove('bg-gray-700');
+                        button.classList.add('bg-green-500', 'border-green-700', 'animate-pulse');
                     }
                 });
-                
+
                 if (state.mode === 'rush') {
-                    state.timeLeft = Math.max(0, state.timeLeft - 3); // Time penalty
+                    state.timeLeft = Math.max(0, state.timeLeft - 3);
                 }
 
-                setTimeout(nextTurn, 800); // Longer pause to see correct answer
+                setTimeout(nextTurn, 800);
             }
-            updateUI(); // Immediate score update
+
+            updateUI();
         }
 
         function nextTurn() {
-            if (!state.isPlaying) return;
+            if (!state.isPlaying) {
+                return;
+            }
+
             state.currentQuestion = generateQuestion();
             updateUI();
         }
 
         function gameLoop() {
-            if (!state.isPlaying) return;
-            
+            if (!state.isPlaying) {
+                return;
+            }
+
             if (state.mode === 'rush') {
                 state.timeLeft--;
                 const percentage = (state.timeLeft / 60) * 100;
                 document.getElementById('time-bar').style.width = `${percentage}%`;
-                
-                // Color shift based on urgency
+
                 const bar = document.getElementById('time-bar');
                 if (percentage < 30) {
-                    bar.className = 'h-full bg-red-500 progress-bar w-full animate-pulse';
+                    bar.className = 'progress-bar h-full w-full animate-pulse bg-red-500';
                 } else {
-                    bar.className = 'h-full bg-gradient-to-r from-green-400 to-blue-500 progress-bar w-full';
+                    bar.className = 'progress-bar h-full w-full bg-gradient-to-r from-green-400 to-blue-500';
                 }
 
                 if (state.timeLeft <= 0) {
                     endGame();
                 }
-            } else {
-                // Practice mode: timer counts UP or just hides?
-                // For MVP, just hide timer logic, keep it simple
             }
+
             updateUI();
         }
 
         function confirmExit() {
-            if (confirm('Tem certeza que quer sair? O progresso será perdido.')) {
+            if (confirm('Tem certeza que quer sair? O progresso sera perdido.')) {
                 location.reload();
             }
         }
 
-        function startGame(mode) {
+        function startGame(mode, selectedTables = []) {
             playSound('click');
             state.mode = mode;
             state.score = 0;
@@ -402,50 +520,60 @@
             state.correctCount = 0;
             state.totalAnswered = 0;
             state.isPlaying = true;
-            
+            state.selectedTables = [...selectedTables].sort((a, b) => a - b);
+
             document.getElementById('start-screen').classList.add('hidden');
             document.getElementById('game-over').classList.add('hidden');
             document.getElementById('game-ui').classList.remove('hidden');
             document.getElementById('game-ui').classList.add('flex');
-            
+
+            const timerWrapper = document.getElementById('timer-wrapper');
+            const timeBarWrapper = document.getElementById('time-bar-wrapper');
+
             if (mode === 'practice') {
-                document.getElementById('timer-display').parentElement.classList.add('hidden'); // Hide timer UI
-                document.getElementById('time-bar').parentElement.classList.add('hidden');
+                timerWrapper.classList.add('hidden');
+                timeBarWrapper.classList.add('hidden');
             } else {
-                document.getElementById('timer-display').parentElement.classList.remove('hidden');
-                document.getElementById('time-bar').parentElement.classList.remove('hidden');
+                timerWrapper.classList.remove('hidden');
+                timeBarWrapper.classList.remove('hidden');
+                document.getElementById('time-bar').className = 'progress-bar h-full w-full bg-gradient-to-r from-green-400 to-blue-500';
+                document.getElementById('time-bar').style.width = '100%';
             }
 
             nextTurn();
-            
-            if (state.timerInterval) clearInterval(state.timerInterval);
+
+            if (state.timerInterval) {
+                clearInterval(state.timerInterval);
+            }
+
             state.timerInterval = setInterval(gameLoop, 1000);
         }
 
         function endGame() {
             state.isPlaying = false;
             clearInterval(state.timerInterval);
-            
+
             document.getElementById('game-ui').classList.add('hidden');
             document.getElementById('game-over').classList.remove('hidden');
             document.getElementById('game-over').classList.add('flex');
-            
+
             document.getElementById('final-score').innerText = state.score;
             document.getElementById('final-combo').innerText = state.maxCombo;
             document.getElementById('final-questions').innerText = state.totalAnswered;
-            
-            const accuracy = state.totalAnswered > 0 
-                ? Math.round((state.correctCount / state.totalAnswered) * 100) 
+
+            const accuracy = state.totalAnswered > 0
+                ? Math.round((state.correctCount / state.totalAnswered) * 100)
                 : 0;
             document.getElementById('final-accuracy').innerText = `${accuracy}%`;
-            
-            playSound('correct'); // Fanfare placeholder
-            
-            // Send score to parent hub
+
+            playSound('correct');
+
             if (window.parent !== window) {
                 window.parent.postMessage({ type: 'game-score', game: 'tabuada', score: state.score }, '*');
             }
         }
+
+        updateTableSelectionUI();
     </script>
 </body>
 </html>
