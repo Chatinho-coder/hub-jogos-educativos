@@ -64,52 +64,54 @@
 </head>
 <body class="h-screen flex flex-col items-center justify-center bg-gray-900 selection:bg-pink-500 selection:text-white">
 
-    <div id="start-screen" class="absolute inset-0 z-50 flex flex-col items-center justify-center bg-gray-900 bg-opacity-95 p-4 text-center">
-        <h1 class="retro-font mb-4 text-4xl text-yellow-400 neon-text md:text-6xl">TABUADA<br>RUSH</h1>
-        <p class="mb-8 text-lg text-gray-300">Treine sua mente na velocidade da luz.</p>
+    <div id="start-screen" class="absolute inset-0 z-50 overflow-y-auto bg-gray-900 bg-opacity-95 p-4 text-center" style="padding-bottom: max(1.5rem, env(safe-area-inset-bottom) + 1rem); -webkit-overflow-scrolling: touch;">
+        <div class="mx-auto flex min-h-full w-full max-w-md flex-col items-center justify-center py-6">
+            <h1 class="retro-font mb-4 text-4xl text-yellow-400 neon-text md:text-6xl">TABUADA<br>RUSH</h1>
+            <p class="mb-8 text-lg text-gray-300">Treine sua mente na velocidade da luz.</p>
 
-        <div class="grid w-full max-w-xs grid-cols-1 gap-4">
-            <button onclick="startGame('rush')" class="btn-push w-full rounded-lg border-b-4 border-purple-800 bg-gradient-to-r from-purple-500 to-pink-500 px-8 py-4 text-xl font-bold text-white hover:brightness-110">
-                MODO TURBO (60s)
-            </button>
-            <button onclick="startGame('practice')" class="btn-push w-full rounded-lg border-b-4 border-green-800 bg-gradient-to-r from-green-500 to-teal-500 px-8 py-4 text-xl font-bold text-white hover:brightness-110">
-                TREINO LIVRE
-            </button>
-            <button id="custom-mode-toggle" onclick="toggleCustomModePanel()" class="btn-push w-full rounded-lg border-b-4 border-amber-800 bg-gradient-to-r from-amber-500 to-orange-500 px-8 py-4 text-xl font-bold text-white hover:brightness-110">
-                TABUADAS ESCOLHIDAS
-            </button>
+            <div class="grid w-full max-w-xs grid-cols-1 gap-4">
+                <button onclick="startGame('rush')" class="btn-push w-full rounded-lg border-b-4 border-purple-800 bg-gradient-to-r from-purple-500 to-pink-500 px-8 py-4 text-xl font-bold text-white hover:brightness-110">
+                    MODO TURBO (60s)
+                </button>
+                <button onclick="startGame('practice')" class="btn-push w-full rounded-lg border-b-4 border-green-800 bg-gradient-to-r from-green-500 to-teal-500 px-8 py-4 text-xl font-bold text-white hover:brightness-110">
+                    TREINO LIVRE
+                </button>
+                <button id="custom-mode-toggle" onclick="toggleCustomModePanel()" class="btn-push w-full rounded-lg border-b-4 border-amber-800 bg-gradient-to-r from-amber-500 to-orange-500 px-8 py-4 text-xl font-bold text-white hover:brightness-110">
+                    TABUADAS ESCOLHIDAS
+                </button>
+            </div>
+
+            <div id="custom-mode-panel" class="hidden mt-5 w-full max-w-sm rounded-2xl border border-amber-500/40 bg-gray-800/90 p-4 text-left shadow-2xl">
+                <div class="mb-3">
+                    <div class="text-sm font-bold uppercase tracking-wider text-amber-300">Modo Personalizado</div>
+                    <p class="mt-1 text-sm text-gray-300">Escolha uma ou mais tabuadas. As perguntas vao usar apenas as selecionadas.</p>
+                </div>
+
+                <div id="table-selector" class="grid grid-cols-3 gap-2"></div>
+
+                <div class="mt-3 flex gap-2">
+                    <button onclick="selectAllTables()" class="rounded-lg bg-gray-700 px-3 py-2 text-sm font-bold text-white transition hover:bg-gray-600">
+                        Todas
+                    </button>
+                    <button onclick="clearTableSelection()" class="rounded-lg bg-gray-700 px-3 py-2 text-sm font-bold text-white transition hover:bg-gray-600">
+                        Limpar
+                    </button>
+                </div>
+
+                <p id="table-selection-status" class="mt-3 text-xs text-gray-400">Selecione ao menos uma tabuada para liberar este modo.</p>
+
+                <div class="mt-4 grid grid-cols-1 gap-3">
+                    <button id="custom-rush-button" onclick="startSelectedTablesMode('rush')" disabled class="btn-push rounded-lg border-b-4 border-amber-900 bg-gradient-to-r from-amber-500 to-orange-500 px-6 py-3 text-base font-bold text-white opacity-50 transition">
+                        Jogar Turbo (60s)
+                    </button>
+                    <button id="custom-practice-button" onclick="startSelectedTablesMode('practice')" disabled class="btn-push rounded-lg border-b-4 border-teal-900 bg-gradient-to-r from-emerald-500 to-teal-500 px-6 py-3 text-base font-bold text-white opacity-50 transition">
+                        Jogar Treino Livre
+                    </button>
+                </div>
+            </div>
+
+            <div class="mt-8 text-sm text-gray-500">v1.1 - Foco em Agilidade Mental</div>
         </div>
-
-        <div id="custom-mode-panel" class="hidden mt-5 w-full max-w-sm rounded-2xl border border-amber-500/40 bg-gray-800/90 p-4 text-left shadow-2xl">
-            <div class="mb-3">
-                <div class="text-sm font-bold uppercase tracking-wider text-amber-300">Modo Personalizado</div>
-                <p class="mt-1 text-sm text-gray-300">Escolha uma ou mais tabuadas. As perguntas vao usar apenas as selecionadas.</p>
-            </div>
-
-            <div id="table-selector" class="grid grid-cols-3 gap-2"></div>
-
-            <div class="mt-3 flex gap-2">
-                <button onclick="selectAllTables()" class="rounded-lg bg-gray-700 px-3 py-2 text-sm font-bold text-white transition hover:bg-gray-600">
-                    Todas
-                </button>
-                <button onclick="clearTableSelection()" class="rounded-lg bg-gray-700 px-3 py-2 text-sm font-bold text-white transition hover:bg-gray-600">
-                    Limpar
-                </button>
-            </div>
-
-            <p id="table-selection-status" class="mt-3 text-xs text-gray-400">Selecione ao menos uma tabuada para liberar este modo.</p>
-
-            <div class="mt-4 grid grid-cols-1 gap-3">
-                <button id="custom-rush-button" onclick="startSelectedTablesMode('rush')" disabled class="btn-push rounded-lg border-b-4 border-amber-900 bg-gradient-to-r from-amber-500 to-orange-500 px-6 py-3 text-base font-bold text-white opacity-50 transition">
-                    Jogar Turbo (60s)
-                </button>
-                <button id="custom-practice-button" onclick="startSelectedTablesMode('practice')" disabled class="btn-push rounded-lg border-b-4 border-teal-900 bg-gradient-to-r from-emerald-500 to-teal-500 px-6 py-3 text-base font-bold text-white opacity-50 transition">
-                    Jogar Treino Livre
-                </button>
-            </div>
-        </div>
-
-        <div class="mt-8 text-sm text-gray-500">v1.1 - Foco em Agilidade Mental</div>
     </div>
 
     <div id="game-ui" class="relative hidden w-full max-w-md flex-col p-4" style="height: 100vh; height: 100dvh; padding-bottom: max(6rem, env(safe-area-inset-bottom) + 5rem); overflow-y: auto;">
